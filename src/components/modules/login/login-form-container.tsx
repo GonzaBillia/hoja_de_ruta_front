@@ -1,6 +1,6 @@
 // src/components/LoginForm.tsx
 import React, { useState, FormEvent } from "react";
-import { useLogin } from "@/hooks/use-login.tsx";
+import { useLogin } from "@/api/auth/hooks/use-login.tsx";
 import { LoginFormView } from "./login-form-view.tsx";
 import { useNavigate } from "react-router-dom";
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useCurrentUser from '@/hooks/use-current-user.tsx';
+import useCurrentUser from '@/api/auth/hooks/use-current-user';
 
 interface RedirectIfAuthenticatedProps {
   children: React.ReactNode;

@@ -6,6 +6,7 @@ import { RedirectIfAuthenticated } from "@/components/modules/login/wrapper/auth
 const LoginPage = lazy(() => import("@/pages/Login/LoginPage.tsx") )
 const DashboardLayout = lazy(() => import ("@/layouts/Dashboard.tsx"))
 const HojasRuta = lazy(() => import ("@/pages/HojasRuta/HojasRuta.tsx"))
+const NuevaRuta = lazy(() => import ("@/pages/NuevaRuta/NuevaRuta.tsx"))
 
 export const AppRoute = () => {
     return (
@@ -19,6 +20,7 @@ export const AppRoute = () => {
                     } />
                     <Route path={ROUTES.MAIN} element={<DashboardLayout />}>
                         <Route path={ROUTES.HOJAS} element={<HojasRuta />} />
+                        <Route path={ROUTES.NUEVA} element={<NuevaRuta />} />
                     </Route>
                 </Routes>
             </Suspense>

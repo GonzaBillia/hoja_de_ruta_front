@@ -16,6 +16,7 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { ModeToggle } from "./mode-toggle"
 import React from "react"
 import { Link, useLocation } from "react-router-dom"
+import NewRouteSheetButton from "./create-route-sheet-button"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
@@ -64,8 +65,9 @@ export function SiteHeader() {
             </BreadcrumbList>
           </Breadcrumb>
       </div>
-    <div>
-        <ModeToggle />
+    <div className="flex items-center gap-4">
+      <NewRouteSheetButton />
+      <ModeToggle />
     </div>
     </header>
   )
