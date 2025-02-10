@@ -31,8 +31,8 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="flex sticky top-0 z-50 w-full items-center border-b bg-background justify-between">
-      <div className="flex h-[--header-height] w-full items-center gap-2 px-4">
+    <header className="flex sticky top-0 z-50 w-full items-center border-b bg-background justify-between px-4">
+      <div className="flex h-[--header-height] w-full items-center gap-2">
         <Button
           className="h-8 w-8"
           variant="ghost"
