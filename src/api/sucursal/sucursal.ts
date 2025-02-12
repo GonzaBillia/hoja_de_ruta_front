@@ -9,6 +9,11 @@ export const getAllSucursales = async (): Promise<Sucursal[]> => {
   return response.data.data as Sucursal[];
 };
 
+export const getSucursalesByRepartidor = async (id: number): Promise<Sucursal[]> => {
+  const response = await apiClient.get<SucursalResponse>(`/api/sucu/${id}/sucursales`);
+  return response.data.data as Sucursal[]
+}
+
 // Obtener una sucursal por ID
 export const getSucursal = async (id: number): Promise<Sucursal> => {
   const response = await apiClient.get<SucursalResponse>(`/api/sucu/${id}`);
