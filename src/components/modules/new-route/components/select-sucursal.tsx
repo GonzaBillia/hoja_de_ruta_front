@@ -1,4 +1,3 @@
-// components/modules/new-route/components/select-sucursal.tsx
 import React, { useState } from "react";
 import {
   Select,
@@ -6,23 +5,25 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Ajusta la ruta según tu estructura
-import { useSucursalesByRepartidor } from "@/api/sucursal/hooks/useSucursalesRepartidor"; // Ajusta la ruta
-import { Sucursal } from "@/api/sucursal/types/sucursal.types"; // Ajusta la ruta y nombre del type
+} from "@/components/ui/select";
+import { useSucursalesByRepartidor } from "@/api/sucursal/hooks/useSucursalesRepartidor";
+import { Sucursal } from "@/api/sucursal/types/sucursal.types";
+import SelectRemitos from "./select-remitos";
 
 interface SelectSucursalProps {
   repartidorId: number;
+  onSucursalSelect?: (sucursal: Sucursal) => void;
 }
 
-const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId }) => {
+const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId, onSucursalSelect }) => {
   const { data: sucursales, isLoading, error } = useSucursalesByRepartidor(repartidorId);
   const [selectedSucursal, setSelectedSucursal] = useState<Sucursal | null>(null);
 
   const handleChange = (value: string) => {
-    // Se busca la sucursal cuyo id (convertido a string) coincide con el valor seleccionado
     const sucursal = sucursales?.find((s) => s.id.toString() === value);
     if (sucursal) {
       setSelectedSucursal(sucursal);
+      if (onSucursalSelect) onSucursalSelect(sucursal);
     }
   };
 
@@ -51,6 +52,8 @@ const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId }) => {
       {selectedSucursal && (
         <div className="mt-2 text-sm">
           <strong>Seleccionado:</strong> {selectedSucursal.nombre}
+          {/* Aquí se integra el componente para seleccionar remitos */}
+          <SelectRemitos sucursalNombre={selectedSucursal.nombre} onChange={(selected) => console.log("Remitos seleccionados:", selected)} />
         </div>
       )}
     </div>

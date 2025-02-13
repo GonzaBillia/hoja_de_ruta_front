@@ -4,7 +4,9 @@ import {
   Html5QrcodeCameraScanConfig, 
   QrcodeErrorCallback 
 } from "html5-qrcode";
+import { useQrContext } from "@/components/context/qr-context";
 import { QrData, QrScannerProps } from "./types/qr-scanner";
+import { useToast } from "@/hooks/use-toast";
 
 const QrScanner: React.FC<QrScannerProps> = ({
   onScanSuccess,
@@ -13,11 +15,11 @@ const QrScanner: React.FC<QrScannerProps> = ({
   height = 300,
 }) => {
   const qrRegionId = "qr-reader";
-  // Referencia para guardar la instancia de Html5Qrcode.
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const { addQrCode, qrCodes } = useQrContext();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Retrasamos la inicialización para que el contenedor ya tenga dimensiones válidas.
     const initTimeout = setTimeout(() => {
       const qrElement = document.getElementById(qrRegionId);
       if (!qrElement || qrElement.offsetWidth === 0) {
@@ -25,67 +27,103 @@ const QrScanner: React.FC<QrScannerProps> = ({
         return;
       }
 
-      // Crea la instancia del lector.
       html5QrCodeRef.current = new Html5Qrcode(qrRegionId);
 
-      // Configuración: fps y tamaño del área de detección.
       const config: Html5QrcodeCameraScanConfig = { 
         fps: 10,
         qrbox: { width: 250, height: 250 }
       };
 
-      // Callback para manejar errores durante el escaneo.
       const errorCallback: QrcodeErrorCallback = (errorMessage: string) => {
-        // Ignorar el error si indica que no se encontró un código (NotFoundException)
         if (errorMessage.includes("NotFoundException")) {
           return;
         }
-        console.warn("Error durante la lectura del QR:", errorMessage);
         if (onScanError) {
           onScanError(errorMessage);
         }
+        toast({
+          title: "Error en el escaneo",
+          description: errorMessage,
+          variant: "destructive",
+        });
       };
 
-      // Inicia el escáner usando la cámara trasera.
       html5QrCodeRef.current.start(
         { facingMode: "environment" },
         config,
         (decodedText: string) => {
-          // Intentamos parsear el JSON recibido en decodedText.
           try {
             const data: QrData = JSON.parse(decodedText);
+
+            // Validación de duplicados: se verifica si ya existe un QR con el mismo "codigo"
+            const duplicate = qrCodes.some((qr) => qr.codigo === data.codigo);
+            if (duplicate) {
+              const duplicateMessage = `Código QR duplicado: ${data.codigo}`;
+              if (onScanError) {
+                onScanError(duplicateMessage);
+              }
+              toast({
+                title: "Duplicado",
+                description: duplicateMessage,
+                variant: "destructive",
+              });
+              // No se agrega el duplicado y se mantiene el lector activo.
+              return;
+            }
+
+            // Notificar al usuario del escaneo exitoso
+            toast({
+              title: "Escaneo exitoso",
+              description: `Código QR ${data.codigo} leído correctamente.`,
+              variant: "success",
+            });
+
             if (onScanSuccess) {
               onScanSuccess(data);
             }
+            addQrCode(data);
           } catch (error) {
-            console.error("Error al parsear el JSON:", error);
+            const errorMsg = "Error al parsear el JSON: " + error;
             if (onScanError) {
-              onScanError("Error al parsear el JSON: " + error);
+              onScanError(errorMsg);
             }
+            toast({
+              title: "Error en el escaneo",
+              description: errorMsg,
+              variant: "destructive",
+            });
           }
         },
         errorCallback
       ).catch((err) => {
         console.error("Error al iniciar el lector de QR:", err);
+        toast({
+          title: "Error al iniciar el lector de QR",
+          description: String(err),
+          variant: "destructive",
+        });
       });
-    }, 100); // Retraso de 100 ms (ajustable según tus necesidades)
+    }, 100);
 
     return () => {
       clearTimeout(initTimeout);
-      // Al desmontar, detener y limpiar la instancia.
       if (html5QrCodeRef.current) {
         html5QrCodeRef.current.stop()
           .then(() => html5QrCodeRef.current?.clear())
           .catch((err) => {
             console.error("Error al detener el lector de QR:", err);
+            toast({
+              title: "Error al detener el lector",
+              description: String(err),
+              variant: "destructive",
+            });
           });
       }
     };
-  }, [onScanSuccess, onScanError]);
+  }, [onScanSuccess, onScanError, addQrCode, qrCodes, toast]);
 
   return (
     <div>
-      {/* Contenedor donde se mostrará la vista de la cámara */}
       <div
         id={qrRegionId}
         style={{ width: `${width}px`, height: `${height}px` }}

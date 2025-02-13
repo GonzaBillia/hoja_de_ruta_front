@@ -1,4 +1,5 @@
 export interface QrData {
+  codigo: string;
   depositCode: string;
   tipoBultoCode: string;
   depositId: string;
