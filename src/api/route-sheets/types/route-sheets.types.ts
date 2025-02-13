@@ -1,15 +1,17 @@
+import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
+
 export interface RouteSheet {
     id: number;
     codigo: string;
     // Agrega aquí otros campos, por ejemplo:
-    // sucursal_id: number;
-    // remito_id: number | null;
-    // repartidor_id: number | null;
-    // created_by: number;
-    // deposito_id: number;
-    // sent_at?: string | null;
-    // received_at?: string | null;
-    // etc.
+    sucursal_id: number;
+    repartidor_id: number | null;
+    created_by?: number;
+    deposito_id?: number;
+    sent_at?: string | null;
+    received_at?: string | null;
+    remitos?: string[];
+    scannedQRCodes?: QrData[]
   }
   
   export interface CreateRouteSheetPayload {

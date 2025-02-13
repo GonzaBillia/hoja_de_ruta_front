@@ -5,6 +5,10 @@ export interface QrData {
   depositId: string;
   tipoBultoId: string;
   serial: number;
+  // Propiedades adicionales, por ejemplo, para filtrar por sucursal:
+  CliApeNom?: string;
+  // Propiedad para identificar el QR (se usa en el key y comparación)
+  Numero: string;
 }
 
 export interface QrScannerProps {

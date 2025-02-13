@@ -9,13 +9,19 @@ import {
 import { useSucursalesByRepartidor } from "@/api/sucursal/hooks/useSucursalesRepartidor";
 import { Sucursal } from "@/api/sucursal/types/sucursal.types";
 import SelectRemitos from "./select-remitos";
+import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 
 interface SelectSucursalProps {
   repartidorId: number;
-  onSucursalSelect?: (sucursal: Sucursal) => void;
+  onSucursalSelect?: (sucursalId: number) => void;
+  onRemitosSelect?: (remitos: QrData[]) => void;
 }
 
-const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId, onSucursalSelect }) => {
+const SelectSucursal: React.FC<SelectSucursalProps> = ({
+  repartidorId,
+  onSucursalSelect,
+  onRemitosSelect,
+}) => {
   const { data: sucursales, isLoading, error } = useSucursalesByRepartidor(repartidorId);
   const [selectedSucursal, setSelectedSucursal] = useState<Sucursal | null>(null);
 
@@ -23,20 +29,21 @@ const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId, onSucursa
     const sucursal = sucursales?.find((s) => s.id.toString() === value);
     if (sucursal) {
       setSelectedSucursal(sucursal);
-      if (onSucursalSelect) onSucursalSelect(sucursal);
+      if (onSucursalSelect) {
+        onSucursalSelect(sucursal.id);
+      }
     }
   };
 
   if (isLoading) {
     return <p>Cargando sucursales...</p>;
   }
-
   if (error) {
     return <p>Error al cargar sucursales</p>;
   }
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-sm py-4">
       <Select onValueChange={handleChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecciona una sucursal" />
@@ -52,8 +59,15 @@ const SelectSucursal: React.FC<SelectSucursalProps> = ({ repartidorId, onSucursa
       {selectedSucursal && (
         <div className="mt-2 text-sm">
           <strong>Seleccionado:</strong> {selectedSucursal.nombre}
-          {/* Aquí se integra el componente para seleccionar remitos */}
-          <SelectRemitos sucursalNombre={selectedSucursal.nombre} onChange={(selected) => console.log("Remitos seleccionados:", selected)} />
+          {/* Se integra el componente para seleccionar remitos */}
+          <SelectRemitos
+            sucursalNombre={selectedSucursal.nombre}
+            onChange={(remitos: QrData[]) => {
+              if (onRemitosSelect) {
+                onRemitosSelect(remitos);
+              }
+            }}
+          />
         </div>
       )}
     </div>

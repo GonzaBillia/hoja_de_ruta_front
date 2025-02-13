@@ -1,5 +1,5 @@
 // components/modules/new-route/components/select-repartidor.tsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Command,
   CommandInput,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/command"; // Ajusta la ruta según tu estructura
 import { useRepartidores } from "@/api/repartidor/hooks/useRepartidores"; // Hook para obtener repartidores
 import { Repartidor } from "@/api/repartidor/types/repartidor.types"; // Interfaz de repartidor
+import { cn } from "@/lib/utils";
 
 interface SelectRepartidorProps {
   selectedRepartidor: Repartidor | null;
@@ -22,26 +23,16 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Registro de datos para depurar
-  useEffect(() => {
-    console.log("Repartidores recibidos:", repartidores);
-  }, [repartidores]);
 
   // Garantizamos que repartidores sea siempre un array
   const filteredRepartidores: Repartidor[] = (repartidores ?? []).filter((r) => {
     if (!r || !r.username) {
-      console.error("Elemento repartidor inválido:", r);
       return false;
     }
     return r.username.toLowerCase().includes(search.toLowerCase());
   });
 
-  useEffect(() => {
-    console.log("Filtered repartidores:", filteredRepartidores);
-  }, [filteredRepartidores]);
-
   const handleSelect = (r: Repartidor) => {
-    console.log("Seleccionado repartidor:", r);
     onSelect(r);
     setSearch(r.username);
     setOpen(false);
@@ -50,11 +41,10 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
   return (
     <div
       ref={containerRef}
-      className="w-full max-w-sm relative"
+      className="w-full max-w-md relative py-4"
       tabIndex={0}
       onBlur={(e) => {
         if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-          console.log("onBlur: cerrando dropdown");
           setOpen(false);
         }
       }}
@@ -67,20 +57,21 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
           placeholder="Buscar repartidor..."
           value={selectedRepartidor ? selectedRepartidor.username : search}
           onValueChange={(value) => {
-            console.log("onValueChange:", value);
             setSearch(value);
             setOpen(true);
           }}
           onFocus={() => {
-            console.log("Input enfocado");
             setOpen(true);
           }}
         />
         {/* Siempre renderizamos CommandList; la visibilidad se controla con la clase "hidden" */}
-        <CommandList className={open ? "" : "hidden"}>
-          <CommandGroup heading="Repartidores">
+        <CommandList className={cn(
+          open ? "absolute z-50 w-full" : "hidden"
+        )}
+          style={{ top: "70%", left: 0 }}>
+          <CommandGroup heading="Repartidores" className="bg-background">
             {isLoading ? (
-              <CommandItem value="loading">Loading...</CommandItem>
+              <CommandItem value="loading">Cargando...</CommandItem>
             ) : error ? (
               <CommandItem value="error">Error al cargar</CommandItem>
             ) : filteredRepartidores.length > 0 ? (
@@ -101,8 +92,7 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
       </Command>
       {selectedRepartidor && (
         <div className="mt-2 text-sm">
-          <strong>Seleccionado:</strong> {selectedRepartidor.username} -{" "}
-          {selectedRepartidor.email}
+          <strong>Seleccionado:</strong> {selectedRepartidor.username}
         </div>
       )}
     </div>
