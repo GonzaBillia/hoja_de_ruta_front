@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { useQrContext } from "@/components/context/qr-context";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
+import QRCodeSummary from "./qrcode-sumary";
 
 interface QRCodeChipsProps {
   onChange?: (codes: QrData[]) => void;
@@ -19,7 +20,7 @@ const QRCodeChips: React.FC<QRCodeChipsProps> = () => {
 
   return (
     <div className="flex flex-col gap-4 py-2 my-4">
-        <span>Remitos Escaneados</span>
+        <span>Codigos QR Escaneados</span>
       <div className="flex flex-wrap gap-2 p-2 border rounded-md">
         {qrCodes.length != 0 ? qrCodes.map((code, index) => (
           <Badge key={index} className="flex items-center gap-1 overflow-auto">
@@ -28,7 +29,7 @@ const QRCodeChips: React.FC<QRCodeChipsProps> = () => {
               variant="ghost"
               size="sm"
               onClick={() => removeQrCode(code)}
-              className="p-0 hover:bg-transparent hover:text-red-600"
+              className="py-0 pl-1 pr-0 hover:bg-transparent hover:text-red-600"
               title="Eliminar código"
             >
               <X size={16} />
@@ -36,6 +37,7 @@ const QRCodeChips: React.FC<QRCodeChipsProps> = () => {
           </Badge>
         )) : <p className="text-accent-foreground p-4 ">Escanea un Código QR para comenzar</p>}
       </div>
+      <QRCodeSummary />
     </div>
   );
 };
