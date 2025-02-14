@@ -22,7 +22,7 @@ export interface RouteSheet {
     repartidor_id?: number;
     // ...otros campos que se envían al crear la hoja de ruta
     // Además, se espera un arreglo de códigos QR:
-    scannedQRCodes: string[];
+    scannedQRCodes: QrData[];
   }
   
   export interface UpdateRouteSheetPayload {

@@ -7,27 +7,55 @@ import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useQrContext } from "@/components/context/qr-context";
 import { RouteSheet } from "@/api/route-sheets/types/route-sheets.types";
 import { Button } from "@/components/ui/button";
+import useCreateRouteSheet from "@/api/route-sheets/hooks/useCreateRouteSheet";
 
 const NuevaRuta = () => {
-  const [routeData, setRouteData] = useState<RouteSheet | null>(null)
+  const [routeData, setRouteData] = useState<RouteSheet | null>(null);
   const [selectedRepartidor, setSelectedRepartidor] = useState<Repartidor | null>(null);
   const [selectedSucursalId, setSelectedSucursalId] = useState<number | null>(null);
   const [selectedRemitos, setSelectedRemitos] = useState<QrData[]>([]);
   const { qrCodes } = useQrContext();
 
-  const handleClick = () => {
-    return
+  // Hook para crear la hoja de ruta
+  const { mutate: createRouteSheet, status } = useCreateRouteSheet();
+
+  const handleClear = () => {
+
   }
 
+  const handleClick = () => {
+    // Verifica que se hayan seleccionado todos los datos requeridos
+    if (!selectedRepartidor || !selectedSucursalId || selectedRemitos.length === 0 || qrCodes.length === 0) {
+      console.error("Faltan datos para crear la hoja de ruta");
+      return;
+    }
+
+    // Prepara el payload de acuerdo a lo que espera tu API.
+    const payload = {
+      repartidor_id: selectedRepartidor.id,
+      sucursal_id: selectedSucursalId,
+      remitos: selectedRemitos,
+      scannedQRCodes: qrCodes
+    };
+
+    // Llama al hook para crear la hoja de ruta.
+    createRouteSheet(payload, {
+      onSuccess: (data) => {
+        setRouteData(data);
+        handleClear()
+      },
+      onError: (error) => {
+        console.error("Error al crear la hoja de ruta:", error);
+      },
+    });
+  };
+
   useEffect(() => {
-    console.log("Repartidor seleccionado:", selectedRepartidor);
-    console.log("Sucursal ID seleccionado:", selectedSucursalId);
-    console.log("Remitos seleccionados:", selectedRemitos);
-    console.log("QRs escaneados: ", qrCodes)
-  }, [selectedRepartidor, selectedSucursalId, selectedRemitos, qrCodes]);
+    console.log("Hoja Creada", routeData);
+  }, [routeData]);
 
   return (
-    <div className="mx-auto min-w-md flex flex-col justify-between p-2">
+    <div className="mx-auto min-w-64 max-w-[22rem] md:max-w-[412px] flex flex-col justify-start p-2">
       <SelectRepartidor
         selectedRepartidor={selectedRepartidor}
         onSelect={(r) => setSelectedRepartidor(r)}
@@ -39,13 +67,13 @@ const NuevaRuta = () => {
             onSucursalSelect={(id) => setSelectedSucursalId(id)}
             onRemitosSelect={(remitos) => setSelectedRemitos(remitos)}
           />
-          {/* En este ejemplo se usa QRCodeChips para otros códigos o funcionalidades */}
+          {/* Se usa QRCodeChips para otros códigos o funcionalidades */}
           <QRCodeChips />
         </>
       )}
-      <div className="w-full my-2">
-        <Button onClick={handleClick} className="w-full my-4">
-          Crear Hoja de Ruta
+      <div className="w-full mt-2 mb-8 md:mb-2">
+        <Button onClick={handleClick} className="w-full my-4" disabled={status == "pending"}>
+          {status == "pending" ? "Creando..." : "Crear Hoja de Ruta"}
         </Button>
       </div>
     </div>

@@ -4,13 +4,13 @@ import { CreateRouteSheetPayload, RouteSheet, UpdateRouteSheetPayload, UpdateRou
 
 // Función para obtener todas las hojas de ruta.
 export const getRouteSheets = async (): Promise<RouteSheet[]> => {
-  const response = await apiClient.get<{ success: boolean; data: RouteSheet[] }>("/route-sheet");
+  const response = await apiClient.get<{ success: boolean; data: RouteSheet[] }>("/api/route-sheet");
   return response.data.data;
 };
 
 // Función para obtener una hoja de ruta por ID.
 export const getRouteSheet = async (id: number): Promise<RouteSheet> => {
-  const response = await apiClient.get<{ success: boolean; data: RouteSheet }>(`/route-sheet/${id}`);
+  const response = await apiClient.get<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${id}`);
   return response.data.data;
 };
 
@@ -18,7 +18,7 @@ export const getRouteSheet = async (id: number): Promise<RouteSheet> => {
 export const createRouteSheet = async (
   payload: CreateRouteSheetPayload
 ): Promise<RouteSheet> => {
-  const response = await apiClient.post<{ success: boolean; data: RouteSheet }>("/route-sheet", payload);
+  const response = await apiClient.post<{ success: boolean; data: RouteSheet }>("/api/route-sheet", payload);
   return response.data.data;
 };
 
@@ -27,13 +27,13 @@ export const updateRouteSheet = async (
   id: number,
   payload: UpdateRouteSheetPayload
 ): Promise<RouteSheet> => {
-  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/route-sheet/${id}`, payload);
+  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${id}`, payload);
   return response.data.data;
 };
 
 // Función para eliminar una hoja de ruta.
 export const deleteRouteSheet = async (id: number): Promise<{ message: string }> => {
-  const response = await apiClient.delete<{ success: boolean; data: any }>(`/route-sheet/${id}`);
+  const response = await apiClient.delete<{ success: boolean; data: any }>(`/api/route-sheet/${id}`);
   return response.data.data;
 };
 
@@ -42,6 +42,6 @@ export const updateRouteSheetState = async (
   id: number,
   payload: UpdateRouteSheetStatePayload
 ): Promise<RouteSheet> => {
-  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/route-sheet/${id}/state`, payload);
+  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${id}/state`, payload);
   return response.data.data;
 };

@@ -41,7 +41,7 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
   return (
     <div
       ref={containerRef}
-      className="w-full max-w-md relative py-4"
+      className="w-full relative py-4"
       tabIndex={0}
       onBlur={(e) => {
         if (!containerRef.current?.contains(e.relatedTarget as Node)) {
