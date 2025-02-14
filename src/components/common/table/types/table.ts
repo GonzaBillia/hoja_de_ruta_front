@@ -1,3 +1,5 @@
+
+
 export type ColumnName = {
     key: string;
     label: string;
@@ -8,4 +10,7 @@ export type TablaGenericaProps<T> = {
     data: T[];
     columnNames: ColumnName[];
     RowDetailsComponent?: React.ComponentType<{ selectedRow: T }>;
+    showActions?: boolean;
+    showFilter?: boolean;
+    showPagination?: boolean;
   };

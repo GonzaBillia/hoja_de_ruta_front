@@ -11,10 +11,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import {
-  VisibilityState,
-} from "@tanstack/react-table";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { VisibilityState } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -33,8 +31,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+// Importa la utilidad para formatear fechas
+import { formatDate } from "@/utils/formatDate";
 
 function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
   return columnNames.map((columnName) => ({
@@ -51,7 +50,20 @@ function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
     cell: ({ row }) => {
       const cellValue = row.getValue(columnName.key);
 
-      // Asegúrate de manejar el tipo `unknown`
+      if (columnName.key === "created_at" && cellValue) {
+        let dateValue: string | Date;
+        if (typeof cellValue === "string" || cellValue instanceof Date) {
+          dateValue = cellValue;
+        } else {
+          dateValue = String(cellValue);
+        }
+        return (
+          <span className="pl-4 text-start block">
+            {formatDate(dateValue)}
+          </span>
+        );
+      }
+
       if (typeof cellValue === "number") {
         return (
           <span className="pl-4 text-start block">
@@ -61,66 +73,64 @@ function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
       }
       if (typeof cellValue === "boolean") {
         return (
-          <span className="pl-4 text-start block">{cellValue ? "Sí" : "No"}</span>
+          <span className="pl-4 text-start block">
+            {cellValue ? "Sí" : "No"}
+          </span>
         );
       }
       if (typeof cellValue === "string") {
         return (
-          <span className="pl-4 text-start block">{cellValue}</span>
+          <span className="pl-4 text-start block">
+            {cellValue}
+          </span>
         );
       }
       return <span className="pl-4 text-start block">N/A</span>;
     },
     filterFn: (row, columnId, filterValue) => {
       const cellValue = row.getValue(columnId);
-
-      // Manejo de tipos para el filtro
       if (typeof cellValue === "number") {
-        return cellValue === parseFloat(filterValue); // Comparación para números
+        return cellValue === parseFloat(filterValue);
       }
       if (typeof cellValue === "string") {
-        return cellValue.toLowerCase().includes(filterValue.toLowerCase()); // Comparación para cadenas
+        return cellValue.toLowerCase().includes(filterValue.toLowerCase());
       }
       return false;
     },
-    enableHiding: columnName.opcional ?? false, // Controla si la columna es ocultable
+    enableHiding: columnName.opcional ?? false,
   }));
 }
 
-
-
 export default function TablaGenerica<T>({
-  data,
+  data = [],
   columnNames,
+  showActions = true,
+  showFilter = true,
+  showPagination = true,
 }: TablaGenericaProps<T>) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection] = React.useState({});
-
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
-    Object.fromEntries(
-      columnNames.map((col) => [col.key, true]) // Todas las columnas visibles por defecto
-    )
+    Object.fromEntries(columnNames.map((col) => [col.key, true]))
   );
 
   const handleClick = (action: string, row: any) => {
-    const { id } = row.original;
+    const { codigo } = row;
     if (action === "view") {
-      // Navega a la ruta de ver detalles, ej: /details/123
-      navigate(`/details/${id}`);
+      navigate(`/detalle/${codigo}`);
     } else if (action === "edit") {
-      // Navega a la ruta de editar, ej: /edit/123
-      navigate(`/edit/${id}`);
+      navigate(`/editar/${codigo}`);
     }
   };
 
-  const columns: ColumnDef<T>[] = [
-    ...createColumns<T>(columnNames),
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => (
+  const baseColumns = createColumns<T>(columnNames);
+  const actionsColumn: ColumnDef<T> = {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => (
+      <div onClick={(e) => { e.stopPropagation(); }} onMouseDown={(e) => { e.stopPropagation(); }}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-6 w-6 p-0">
@@ -128,28 +138,35 @@ export default function TablaGenerica<T>({
               <MoreHorizontal className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <DropdownMenuItem
-              onClick={() => {
-                // Acción para editar
-                handleClick("view", row.original)
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick("view", row.original);
               }}
             >
               Detalles
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                // Acción para editar
-                handleClick("edit", row.original)
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick("edit", row.original);
               }}
             >
               Editar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      ),
-    }
-  ];
+      </div>
+    ),
+  };
+
+  const columns: ColumnDef<T>[] = showActions
+    ? [...baseColumns, actionsColumn]
+    : baseColumns;
 
   const table = useReactTable<T>({
     data,
@@ -173,13 +190,13 @@ export default function TablaGenerica<T>({
     <div className="flex w-full h-full flex-grow">
       <div className="transition-all w-full h-full">
         <div className="flex flex-col items-center sm:flex-row sm:justify-between gap-4 py-4">
-          <FiltroTabla table={table} />
-          {/* Muestra la paginación en el header solo en pantallas sm en adelante */}
-          <div className="hidden sm:block">
-            <PaginacionTabla table={table} />
-          </div>
+          {showFilter && <FiltroTabla table={table} />}
+          {showPagination && (
+            <div className="hidden sm:block">
+              <PaginacionTabla table={table} />
+            </div>
+          )}
         </div>
-        {/* Contenedor para la tabla con overflow horizontal */}
         <div className="rounded-md border w-full overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader>
@@ -190,9 +207,9 @@ export default function TablaGenerica<T>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -204,7 +221,10 @@ export default function TablaGenerica<T>({
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="text-center">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -219,12 +239,12 @@ export default function TablaGenerica<T>({
             </TableBody>
           </Table>
         </div>
-        {/* Muestra la paginación debajo de la tabla solo en móvil */}
-        <div className="block sm:hidden mt-4">
-          <PaginacionTabla table={table} />
-        </div>
+        {showPagination && (
+          <div className="block sm:hidden mt-4">
+            <PaginacionTabla table={table} />
+          </div>
+        )}
       </div>
     </div>
   );
-
 }

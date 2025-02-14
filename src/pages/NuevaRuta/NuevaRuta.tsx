@@ -11,16 +11,27 @@ import useCreateRouteSheet from "@/api/route-sheets/hooks/useCreateRouteSheet";
 
 const NuevaRuta = () => {
   const [routeData, setRouteData] = useState<RouteSheet | null>(null);
+  const [notReady, setNotReady] = useState<boolean>(true)
   const [selectedRepartidor, setSelectedRepartidor] = useState<Repartidor | null>(null);
   const [selectedSucursalId, setSelectedSucursalId] = useState<number | null>(null);
   const [selectedRemitos, setSelectedRemitos] = useState<QrData[]>([]);
-  const { qrCodes } = useQrContext();
+  const { qrCodes, clearQrCodes } = useQrContext();
+
+  useEffect(() => {
+    setTimeout(() => {
+      clearQrCodes();
+    }, 0);
+  }, [clearQrCodes]);
 
   // Hook para crear la hoja de ruta
   const { mutate: createRouteSheet, status } = useCreateRouteSheet();
 
   const handleClear = () => {
-
+    setRouteData(null)
+    setSelectedRepartidor(null)
+    setSelectedSucursalId(null)
+    setSelectedRemitos([])
+    clearQrCodes()
   }
 
   const handleClick = () => {
@@ -42,6 +53,7 @@ const NuevaRuta = () => {
     createRouteSheet(payload, {
       onSuccess: (data) => {
         setRouteData(data);
+        console.log(routeData)
         handleClear()
       },
       onError: (error) => {
@@ -51,8 +63,12 @@ const NuevaRuta = () => {
   };
 
   useEffect(() => {
-    console.log("Hoja Creada", routeData);
-  }, [routeData]);
+    if (selectedRepartidor && selectedSucursalId && selectedRemitos.length > 0 && qrCodes.length > 0) {
+      setNotReady(false)
+    } else {
+      setNotReady(true)
+    }
+  }, [selectedRemitos, selectedRepartidor, selectedSucursalId, qrCodes]);
 
   return (
     <div className="mx-auto min-w-64 max-w-[22rem] md:max-w-[412px] flex flex-col justify-start p-2">
@@ -67,12 +83,13 @@ const NuevaRuta = () => {
             onSucursalSelect={(id) => setSelectedSucursalId(id)}
             onRemitosSelect={(remitos) => setSelectedRemitos(remitos)}
           />
-          {/* Se usa QRCodeChips para otros códigos o funcionalidades */}
-          <QRCodeChips />
+          {selectedSucursalId && selectedRemitos.length > 0 && (
+            <QRCodeChips />
+          )}
         </>
       )}
       <div className="w-full mt-2 mb-8 md:mb-2">
-        <Button onClick={handleClick} className="w-full my-4" disabled={status == "pending"}>
+        <Button onClick={handleClick} className="w-full my-4" disabled={notReady}>
           {status == "pending" ? "Creando..." : "Crear Hoja de Ruta"}
         </Button>
       </div>

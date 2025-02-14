@@ -13,9 +13,10 @@ export const useCreateRouteSheet = (): UseMutationResult<
 
   return useMutation<RouteSheet, unknown, CreateRouteSheetPayload>({
     mutationFn: createRouteSheet,
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalida o actualiza la query que almacena las hojas de ruta.
       queryClient.invalidateQueries({ queryKey: ['routeSheets'] });
+      return data
     },
     onError: (error: unknown) => {
       console.error("Error al crear la hoja de ruta:", error);

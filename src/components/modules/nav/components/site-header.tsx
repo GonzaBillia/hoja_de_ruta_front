@@ -17,6 +17,7 @@ import { ModeToggle } from "./mode-toggle"
 import React from "react"
 import { Link, useLocation } from "react-router-dom"
 import NewRouteSheetButton from "./create-route-sheet-button"
+import { ROUTES } from "@/routes/routeConfig"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
@@ -24,7 +25,7 @@ export function SiteHeader() {
 
   const pathnames = location.pathname.split("/").filter((x) => x);
   const breadcrumbs = [
-    { label: "Inicio", href: "/" },
+    { label: "Inicio", href: ROUTES.MAIN },
     ...pathnames.map((value, index) => ({
       label: value.charAt(0).toUpperCase() + value.slice(1), // Capitalizar el texto
       href: `/${pathnames.slice(0, index + 1).join("/")}`, // Crear la URL acumulativa

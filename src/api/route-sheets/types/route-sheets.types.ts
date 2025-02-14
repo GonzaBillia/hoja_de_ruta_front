@@ -3,7 +3,8 @@ import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 export interface RouteSheet {
     id: number;
     codigo: string;
-    // Agrega aquí otros campos, por ejemplo:
+    estado_id?: number
+    created_at: Date | string;
     sucursal_id: number;
     repartidor_id: number | null;
     created_by?: number;

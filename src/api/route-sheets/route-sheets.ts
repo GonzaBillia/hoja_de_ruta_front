@@ -14,6 +14,12 @@ export const getRouteSheet = async (id: number): Promise<RouteSheet> => {
   return response.data.data;
 };
 
+// Función para obtener una hoja de ruta por ID.
+export const getRouteSheetByCodigo = async (codigo: string): Promise<RouteSheet> => {
+  const response = await apiClient.get<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/codigo/${codigo}`);
+  return response.data.data;
+};
+
 // Función para crear una nueva hoja de ruta.
 export const createRouteSheet = async (
   payload: CreateRouteSheetPayload
