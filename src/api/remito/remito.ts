@@ -24,6 +24,11 @@ export const getRemitoById = async (id: number): Promise<Remito> => {
   return response.data.data;
 };
 
+export const getRemitosByRouteSheetId = async (routesheetId: number): Promise<Remito[]> => {
+  const response = await apiClient.get(`${API_URL}/routesheet/${routesheetId}`);
+  return response.data.data;
+};
+
 // Crea un nuevo remito
 export const createRemito = async (newRemito: Partial<Remito>): Promise<Remito> => {
   const response = await apiClient.post(API_URL, newRemito);

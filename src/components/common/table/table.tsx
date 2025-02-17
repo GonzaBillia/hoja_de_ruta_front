@@ -7,7 +7,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -32,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-// Importa la utilidad para formatear fechas
 import { formatDate } from "@/utils/formatDate";
 
 function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
@@ -47,6 +45,8 @@ function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
         <ArrowUpDown />
       </Button>
     ),
+    // Propiedad adicional para usar en el filtro
+    label: columnName.label,
     cell: ({ row }) => {
       const cellValue = row.getValue(columnName.key);
 
@@ -107,6 +107,11 @@ export default function TablaGenerica<T>({
   showActions = true,
   showFilter = true,
   showPagination = true,
+  // Propiedades para paginación manual (server-side)
+  manualPagination = false,
+  pageCount = 1,
+  currentPage = 1,
+  onPageChange,
 }: TablaGenericaProps<T>) {
   const navigate = useNavigate();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -130,7 +135,14 @@ export default function TablaGenerica<T>({
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => (
-      <div onClick={(e) => { e.stopPropagation(); }} onMouseDown={(e) => { e.stopPropagation(); }}>
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-6 w-6 p-0">
@@ -138,7 +150,8 @@ export default function TablaGenerica<T>({
               <MoreHorizontal className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end"
+          <DropdownMenuContent
+            align="end"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -171,11 +184,9 @@ export default function TablaGenerica<T>({
   const table = useReactTable<T>({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
+    manualPagination, // Indicamos si la paginación es manual (server-side)
+    pageCount,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     state: {
@@ -191,9 +202,14 @@ export default function TablaGenerica<T>({
       <div className="transition-all w-full h-full">
         <div className="flex flex-col items-center sm:flex-row sm:justify-between gap-4 py-4">
           {showFilter && <FiltroTabla table={table} />}
-          {showPagination && (
+          {showPagination && manualPagination && onPageChange && (
             <div className="hidden sm:block">
-              <PaginacionTabla table={table} />
+              <PaginacionTabla
+                currentPage={currentPage}
+                pageCount={pageCount}
+                onPrevious={() => onPageChange(currentPage - 1)}
+                onNext={() => onPageChange(currentPage + 1)}
+              />
             </div>
           )}
         </div>
@@ -239,9 +255,14 @@ export default function TablaGenerica<T>({
             </TableBody>
           </Table>
         </div>
-        {showPagination && (
+        {showPagination && manualPagination && onPageChange && (
           <div className="block sm:hidden mt-4">
-            <PaginacionTabla table={table} />
+            <PaginacionTabla
+              currentPage={currentPage}
+              pageCount={pageCount}
+              onPrevious={() => onPageChange(currentPage - 1)}
+              onNext={() => onPageChange(currentPage + 1)}
+            />
           </div>
         )}
       </div>

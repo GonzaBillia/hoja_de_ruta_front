@@ -27,13 +27,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import useCurrentUser from "@/api/auth/hooks/use-current-user"
+import { Link } from "react-router-dom"
+import { ROUTES } from "@/routes/routeConfig"
+import { AppSidebarSkeleton } from "./components/sidebar-skeleton"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Playground",
@@ -41,18 +40,9 @@ const data = {
       icon: SquareTerminal,
       isActive: true,
       items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+        { title: "History", url: "#" },
+        { title: "Starred", url: "#" },
+        { title: "Settings", url: "#" },
       ],
     },
     {
@@ -60,18 +50,9 @@ const data = {
       url: "#",
       icon: Bot,
       items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
+        { title: "Genesis", url: "#" },
+        { title: "Explorer", url: "#" },
+        { title: "Quantum", url: "#" },
       ],
     },
     {
@@ -79,22 +60,10 @@ const data = {
       url: "#",
       icon: BookOpen,
       items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
+        { title: "Introduction", url: "#" },
+        { title: "Get Started", url: "#" },
+        { title: "Tutorials", url: "#" },
+        { title: "Changelog", url: "#" },
       ],
     },
     {
@@ -102,57 +71,36 @@ const data = {
       url: "#",
       icon: Settings2,
       items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        { title: "General", url: "#" },
+        { title: "Team", url: "#" },
+        { title: "Billing", url: "#" },
+        { title: "Limits", url: "#" },
       ],
     },
   ],
   navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
+    { title: "Support", url: "#", icon: LifeBuoy },
+    { title: "Feedback", url: "#", icon: Send },
   ],
   projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
+    { name: "Design Engineering", url: "#", icon: Frame },
+    { name: "Sales & Marketing", url: "#", icon: PieChart },
+    { name: "Travel", url: "#", icon: Map },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: userData, isLoading } = useCurrentUser()
+
+  if (isLoading) {
+    return <AppSidebarSkeleton />
+  }
+
+  // Si no se obtuvo usuario, puedes mostrar un mensaje o simplemente no renderizar la sidebar
+  if (!userData) {
+    return <div>No se pudo cargar el usuario.</div>
+  }
+
   return (
     <Sidebar
       className="top-[--header-height] !h-[calc(100svh-var(--header-height))]"
@@ -162,15 +110,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link to={ROUTES.MAIN}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-semibold">
+                    Sanchez Antoniolli
+                  </span>
+                  <span className="truncate text-xs">
+                    {userData.role?.name || ""}
+                  </span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -181,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   )

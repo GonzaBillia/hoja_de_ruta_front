@@ -45,31 +45,34 @@ export function SiteHeader() {
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb className="hidden sm:block">
-            <BreadcrumbList>
-              {breadcrumbs.map((breadcrumb, index) => {
-                const isLast = index === breadcrumbs.length - 1;
-                return (
-                  <React.Fragment key={breadcrumb.href}>
-                    <BreadcrumbItem>
-                      {isLast ? (
-                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink as={Link} to={breadcrumb.href}>
-                          {breadcrumb.label}
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator />}
-                  </React.Fragment>
-                );
-              })}
-            </BreadcrumbList>
-          </Breadcrumb>
+          <BreadcrumbList>
+            {breadcrumbs.map((breadcrumb, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              // Si el label es "Detalle" (o según la lógica que necesites) se mostrará sin enlace.
+              const isDetalle = breadcrumb.label.toLowerCase() === "detalle";
+              return (
+                <React.Fragment key={breadcrumb.href}>
+                  <BreadcrumbItem>
+                    {isLast || isDetalle ? (
+                      <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink as={Link} to={breadcrumb.href}>
+                        {breadcrumb.label}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                  {!isLast && <BreadcrumbSeparator />}
+                </React.Fragment>
+              );
+            })}
+
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
-    <div className="flex items-center gap-4">
-      <NewRouteSheetButton />
-      <ModeToggle />
-    </div>
+      <div className="flex items-center gap-4">
+        <NewRouteSheetButton />
+        <ModeToggle />
+      </div>
     </header>
   )
 }

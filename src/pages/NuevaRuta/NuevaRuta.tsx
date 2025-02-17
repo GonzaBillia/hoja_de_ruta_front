@@ -8,6 +8,7 @@ import { useQrContext } from "@/components/context/qr-context";
 import { RouteSheet } from "@/api/route-sheets/types/route-sheets.types";
 import { Button } from "@/components/ui/button";
 import useCreateRouteSheet from "@/api/route-sheets/hooks/useCreateRouteSheet";
+import { useToast } from "@/hooks/use-toast";
 
 const NuevaRuta = () => {
   const [routeData, setRouteData] = useState<RouteSheet | null>(null);
@@ -16,12 +17,13 @@ const NuevaRuta = () => {
   const [selectedSucursalId, setSelectedSucursalId] = useState<number | null>(null);
   const [selectedRemitos, setSelectedRemitos] = useState<QrData[]>([]);
   const { qrCodes, clearQrCodes } = useQrContext();
+  const { toast } = useToast()
 
   useEffect(() => {
     setTimeout(() => {
       clearQrCodes();
     }, 0);
-  }, [clearQrCodes]);
+  }, []);
 
   // Hook para crear la hoja de ruta
   const { mutate: createRouteSheet, status } = useCreateRouteSheet();
@@ -58,6 +60,18 @@ const NuevaRuta = () => {
       },
       onError: (error) => {
         console.error("Error al crear la hoja de ruta:", error);
+        let errorMessage = "Error al crear la hoja de ruta.";
+        if (error && typeof error === "object" && "response" in error) {
+          // @ts-ignore
+          errorMessage = error.response?.data?.message || error.response?.data || errorMessage;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
       },
     });
   };
@@ -83,7 +97,7 @@ const NuevaRuta = () => {
             onSucursalSelect={(id) => setSelectedSucursalId(id)}
             onRemitosSelect={(remitos) => setSelectedRemitos(remitos)}
           />
-          {selectedSucursalId && selectedRemitos.length > 0 && (
+          {selectedRemitos.length > 0 && (
             <QRCodeChips />
           )}
         </>

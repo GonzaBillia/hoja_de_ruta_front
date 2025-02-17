@@ -16,12 +16,19 @@ export const useCreateRouteSheet = (): UseMutationResult<
     onSuccess: (data) => {
       // Invalida o actualiza la query que almacena las hojas de ruta.
       queryClient.invalidateQueries({ queryKey: ['routeSheets'] });
-      return data
+      return data;
     },
     onError: (error: unknown) => {
-      console.error("Error al crear la hoja de ruta:", error);
+      // Si el error proviene de axios, podemos obtener el mensaje o la respuesta.
+      if (error && typeof error === 'object' && 'response' in error) {
+        // @ts-ignore
+        console.error("Error al crear la hoja de ruta:", error.response?.data || error.response);
+      } else if (error instanceof Error) {
+        console.error("Error al crear la hoja de ruta:", error.message);
+      } else {
+        console.error("Error al crear la hoja de ruta:", error);
+      }
     },
-    
   });
 };
 

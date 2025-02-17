@@ -15,6 +15,16 @@ export interface RouteSheet {
     scannedQRCodes?: QrData[]
   }
   
+  export interface PaginatedRouteSheets {
+    data: RouteSheet[];
+    meta: {
+      page: number;
+      last_page: number;
+      total: number;
+    };
+  }
+  
+
   export interface CreateRouteSheetPayload {
     // Datos de la hoja de ruta
     // Por ejemplo:

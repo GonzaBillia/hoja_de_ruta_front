@@ -8,12 +8,18 @@ import useBultos from "@/api/bulto/hooks/useBultos";
 import useRepartidores from "@/api/repartidor/hooks/useRepartidores";
 import { formatDate } from "@/utils/formatDate";
 
-export const useTransformedRouteSheets = () => {
-  const { data: routeSheets, isLoading: loadingRS, error: errorRS } = useRouteSheets();
+export const useTransformedRouteSheets = (page: number, limit: number) => {
+  // Se asume que useRouteSheets acepta page y limit como parámetros
+  const { data: routeSheetsResponse, isLoading: loadingRS, error: errorRS } = useRouteSheets(page, limit);
   const { data: sucursales, isLoading: loadingSuc, error: errorSuc } = useSucursales();
   const { data: depositos, isLoading: loadingDepo, error: errorDepo } = useDepositos();
   const { data: bultos, isLoading: loadingBulto, error: errorBulto } = useBultos();
   const { data: repartidores, isLoading: loadingRep, error: errorRep } = useRepartidores();
+
+  // Extraemos el array de routeSheets desde la propiedad data
+  const routeSheets = useMemo(() => {
+    return routeSheetsResponse?.data || [];
+  }, [routeSheetsResponse]);
 
   const transformedData = useMemo(() => {
     if (!routeSheets || !sucursales || !depositos || !bultos || !repartidores) return [];
@@ -38,17 +44,24 @@ export const useTransformedRouteSheets = () => {
       // Contar los bultos asociados filtrando por route_sheet_id.
       const bultosCount = bultos.filter(b => b.route_sheet_id === rs.id).length;
 
-      // Priorizar received_at; si no existe, usar sent_at; si tampoco, usar created_at.
-      const rawDate = rs.received_at 
-        ? rs.received_at 
-        : rs.sent_at 
-        ? rs.sent_at 
-        : rs.created_at;
-      
-      // Usar la utilidad de formateo; si no hay fecha, asignar "N/A"
-      const displayDate = rawDate ? formatDate(rawDate) : "N/A";
+      // Prioridad de fecha: Recepción > Envío > Creación.
+      let dateValue = null;
+      let dateType = "";
+      if (rs.received_at) {
+        dateValue = rs.received_at;
+        dateType = "Recepción";
+      } else if (rs.sent_at) {
+        dateValue = rs.sent_at;
+        dateType = "Envío";
+      } else if (rs.created_at) {
+        dateValue = rs.created_at;
+        dateType = "Creación";
+      } else {
+        dateType = "N/A";
+      }
+      const displayDate = dateValue ? formatDate(dateValue) : "N/A";
 
-      // Definir el estado basado en la fecha: priorizar received_at.
+      // Estado basado en la fecha, siguiendo la misma prioridad.
       const estadoDisplay = rs.received_at
         ? "Recibido"
         : rs.sent_at
@@ -62,6 +75,7 @@ export const useTransformedRouteSheets = () => {
         repartidor: repartidorName,
         bultosCount,
         displayDate,
+        displayDateType: dateType,
         estadoDisplay,
       };
     });
@@ -69,6 +83,7 @@ export const useTransformedRouteSheets = () => {
 
   return {
     transformedData,
+    meta: routeSheetsResponse?.meta, // Info de paginación: page, last_page, total
     loading: loadingRS || loadingSuc || loadingDepo || loadingBulto || loadingRep,
     error: errorRS || errorSuc || errorDepo || errorBulto || errorRep,
   };

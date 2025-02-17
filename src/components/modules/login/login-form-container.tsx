@@ -3,6 +3,7 @@ import React, { useState, FormEvent } from "react";
 import { useLogin } from "@/api/auth/hooks/use-login.tsx";
 import { LoginFormView } from "./login-form-view.tsx";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast.ts";
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const loginMutation = useLogin();
   const navigate = useNavigate();
+  const { toast } = useToast()
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,8 +21,25 @@ export const LoginForm: React.FC = () => {
       { email, password },
       {
         onError: (err: any) => {
+          // Extrae el mensaje de error
           const errorMessage =
             err.response?.data?.message || "Error al iniciar sesión";
+          
+          // Si el error es de conexión, podemos notificar que se reintentará
+          if (err.code === "ERR_CONNECTION_RESET" || err.message.includes("connection")) {
+            toast({
+              title: "Error de conexión",
+              description: `${errorMessage}. Se reintentará automáticamente...`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: errorMessage,
+              variant: "destructive",
+            });
+          }
+          
           setError(errorMessage);
         },
         onSuccess: () => {
@@ -31,6 +50,7 @@ export const LoginForm: React.FC = () => {
         },
       }
     );
+    
   };
 
    // Usamos la propiedad 'status' para determinar si está cargando

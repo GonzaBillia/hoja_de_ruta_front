@@ -16,6 +16,8 @@ const QrScanner: React.FC<QrScannerProps> = ({
 }) => {
   const qrRegionId = "qr-reader";
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  // Flag para saber si el scanner se inició correctamente.
+  const scannerStarted = useRef(false);
   const { addQrCode, qrCodes } = useQrContext();
   const { toast } = useToast();
 
@@ -26,7 +28,6 @@ const QrScanner: React.FC<QrScannerProps> = ({
         console.error("El contenedor del lector no tiene dimensiones válidas.");
         return;
       }
-
       html5QrCodeRef.current = new Html5Qrcode(qrRegionId);
 
       const config: Html5QrcodeCameraScanConfig = { 
@@ -55,7 +56,7 @@ const QrScanner: React.FC<QrScannerProps> = ({
           try {
             const data: QrData = JSON.parse(decodedText);
 
-            // Validación de duplicados: se verifica si ya existe un QR con el mismo "codigo"
+            // Validar si el código ya fue leído
             const duplicate = qrCodes.some((qr) => qr.codigo === data.codigo);
             if (duplicate) {
               const duplicateMessage = `Código QR duplicado: ${data.codigo}`;
@@ -67,11 +68,10 @@ const QrScanner: React.FC<QrScannerProps> = ({
                 description: duplicateMessage,
                 variant: "destructive",
               });
-              // No se agrega el duplicado y se mantiene el lector activo.
               return;
             }
 
-            // Notificar al usuario del escaneo exitoso
+            // Notificar escaneo exitoso
             toast({
               title: "Escaneo exitoso",
               description: `Código QR ${data.codigo} leído correctamente.`,
@@ -95,7 +95,10 @@ const QrScanner: React.FC<QrScannerProps> = ({
           }
         },
         errorCallback
-      ).catch((err) => {
+      ).then(() => {
+        // Indicamos que el scanner se inició correctamente
+        scannerStarted.current = true;
+      }).catch((err) => {
         console.error("Error al iniciar el lector de QR:", err);
         toast({
           title: "Error al iniciar el lector de QR",
@@ -107,10 +110,15 @@ const QrScanner: React.FC<QrScannerProps> = ({
 
     return () => {
       clearTimeout(initTimeout);
-      if (html5QrCodeRef.current) {
+      // Solo se llama a stop si el scanner se inició
+      if (html5QrCodeRef.current && scannerStarted.current) {
         html5QrCodeRef.current.stop()
           .then(() => html5QrCodeRef.current?.clear())
           .catch((err) => {
+            // Si el error es de que el scanner no está corriendo, se ignora.
+            if (err.toString().includes("scanner is not running or paused")) {
+              return;
+            }
             console.error("Error al detener el lector de QR:", err);
             toast({
               title: "Error al detener el lector",

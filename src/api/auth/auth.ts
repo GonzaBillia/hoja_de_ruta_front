@@ -17,6 +17,7 @@ return response.data;
 export const fetchCurrentUser = async (): Promise<User | null> => {
     try {
         const response = await apiClient.get<{ success: boolean; data: { user: User } }>('/api/auth/me', { withCredentials: true });
+        console.log(response.data.data)
         return response.data.data.user ?? null;
     } catch (error: any) {
         if (error.response?.status === 401) {

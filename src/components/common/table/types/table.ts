@@ -6,11 +6,16 @@ export type ColumnName = {
     opcional: boolean;
   };
   
-export type TablaGenericaProps<T> = {
+  export interface TablaGenericaProps<T> {
     data: T[];
     columnNames: ColumnName[];
-    RowDetailsComponent?: React.ComponentType<{ selectedRow: T }>;
     showActions?: boolean;
     showFilter?: boolean;
     showPagination?: boolean;
-  };
+    // Propiedades para paginación manual (server-side)
+    manualPagination?: boolean;
+    pageCount?: number;
+    currentPage?: number;
+    onPageChange?: (page: number) => void;
+  }
+  

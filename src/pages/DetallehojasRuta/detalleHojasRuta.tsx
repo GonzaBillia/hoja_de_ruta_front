@@ -15,17 +15,16 @@ import TablaGenerica from "@/components/common/table/table";
 import { ColumnName } from "@/components/common/table/types/table";
 
 const BultosName: ColumnName[] = [
-    {key: "codigo", label: "Codigo QR", opcional: false},
-    {key: "tipo_bulto_id", label: "Tipo de Bulto", opcional: false}
-]
+  { key: "codigo", label: "Codigo QR", opcional: false },
+];
 
 const RouteSheetDetail: React.FC = () => {
   // Se espera que la URL tenga un parámetro "codigo"
   const { codigo } = useParams<{ codigo: string }>();
   const navigate = useNavigate();
 
-  // Hook personalizado para obtener y transformar los detalles de la hoja de ruta
-  const { transformedRouteSheet: routeSheet, loading, error } = useTransformedRouteSheet(codigo!);
+  // Hook para obtener y transformar los detalles de la hoja de ruta
+  const { transformedRouteSheet, loading, error } = useTransformedRouteSheet(codigo!);
 
   if (loading) {
     return <FullScreenLoader />;
@@ -40,13 +39,15 @@ const RouteSheetDetail: React.FC = () => {
     );
   }
 
-  if (!routeSheet) {
+  if (!transformedRouteSheet) {
     return (
       <div className="p-4">
         <h2 className="text-xl font-semibold">No se encontró la hoja de ruta</h2>
       </div>
     );
   }
+
+  const routeSheet = transformedRouteSheet;
 
   return (
     <div className="p-4 flex-1">
@@ -64,30 +65,35 @@ const RouteSheetDetail: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p>
-                <strong>Estado Actual:</strong> {routeSheet.estado || routeSheet.estado_id}
+                <strong>Estado Actual:</strong>{" "}
+                {routeSheet.estado || routeSheet.estado_id}
               </p>
               <p>
-                <strong>Depósito:</strong> {routeSheet.deposito || routeSheet.deposito_id}
+                <strong>Depósito:</strong>{" "}
+                {routeSheet.deposito || routeSheet.deposito_id}
               </p>
               <p>
-              <strong>Fecha de Creación:</strong>{" "}
-              {routeSheet.createdAtFormatted || "-"}
-            </p>
+                <strong>Fecha de Creación:</strong>{" "}
+                {routeSheet.createdAtFormatted || "-"}
+              </p>
             </div>
             <div>
               <p>
-                <strong>Repartidor a Cargo:</strong> {routeSheet.repartidor || routeSheet.repartidor_id}
+                <strong>Repartidor a Cargo:</strong>{" "}
+                {routeSheet.repartidor || routeSheet.repartidor_id}
               </p>
               <p>
-                <strong>Sucursal de Destino:</strong> {routeSheet.sucursal || routeSheet.sucursal_id}
+                <strong>Sucursal de Destino:</strong>{" "}
+                {routeSheet.sucursal || routeSheet.sucursal_id}
               </p>
               <p>
-                <strong>Total de Bultos:</strong> {routeSheet.bultosCount ?? 0}
+                <strong>Total de Bultos:</strong>{" "}
+                {routeSheet.bultosCount ?? 0}
               </p>
             </div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="mt-4 space-y-2">
-            
             <p>
               <strong>Fecha de Envío:</strong>{" "}
               {routeSheet.sentAtFormatted || "Pendiente"}
@@ -97,19 +103,37 @@ const RouteSheetDetail: React.FC = () => {
               {routeSheet.receivedAtFormatted || "Pendiente"}
             </p>
           </div>
-        
+          <div className="mt-4 space-y-2">
+            <p><strong>Remitos Asociados:</strong></p>
+          {routeSheet.remitos && routeSheet.remitos.length > 0 ? (
+            <ul className="list-disc pl-5">
+              {routeSheet.remitos.map((remito: any) => (
+                <li key={remito.id}>{remito.external_id}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No hay remitos asignados.</p>
+          )}
+          </div>
+          </div>
         </CardContent>
       </Card>
       <Card className="max-w-3xl mx-auto mt-2">
-            <CardHeader>
-            <CardTitle className="text-xl font-bold">
-                Detalle de Bultos
-            </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <TablaGenerica data={routeSheet.bultos} columnNames={BultosName} showActions={false} showFilter={false} showPagination={false} />
-            </CardContent>
-        </Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            Detalle de Bultos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TablaGenerica
+            data={routeSheet.bultos}
+            columnNames={BultosName}
+            showActions={false}
+            showFilter={false}
+            showPagination={false}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

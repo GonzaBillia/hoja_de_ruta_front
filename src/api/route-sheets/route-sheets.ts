@@ -1,11 +1,32 @@
 // src/api/routesheet/routesheet.ts
 import apiClient from "../apiClient";
-import { CreateRouteSheetPayload, RouteSheet, UpdateRouteSheetPayload, UpdateRouteSheetStatePayload } from "./types/route-sheets.types";
+import { CreateRouteSheetPayload, PaginatedRouteSheets, RouteSheet, UpdateRouteSheetPayload, UpdateRouteSheetStatePayload } from "./types/route-sheets.types";
 
-// Función para obtener todas las hojas de ruta.
-export const getRouteSheets = async (): Promise<RouteSheet[]> => {
-  const response = await apiClient.get<{ success: boolean; data: RouteSheet[] }>("/api/route-sheet");
-  return response.data.data;
+export const getRouteSheets = async (page: number, limit: number): Promise<PaginatedRouteSheets> => {
+  const response = await apiClient.get<{ success: boolean; data: { data: RouteSheet[]; meta: any } }>("/api/route-sheet", {
+    params: { page, limit },
+  });
+  
+  // Si la respuesta tiene la forma { data: [...], meta: {...} }
+  const responseData = response.data.data;
+  const routeSheetsArray = Array.isArray(responseData) ? responseData : responseData.data;
+  
+  // Si ya viene paginada por el backend, podrías simplemente retornar esa paginación.
+  // Pero si necesitas calcularla localmente, puedes hacerlo:
+  const total = routeSheetsArray.length;
+  const last_page = Math.ceil(total / limit);
+  const start = (page - 1) * limit;
+  const paginatedData = routeSheetsArray.slice(start, start + limit);
+  
+  
+  return {
+    data: paginatedData,
+    meta: {
+      page,
+      last_page,
+      total,
+    },
+  };
 };
 
 // Función para obtener una hoja de ruta por ID.
