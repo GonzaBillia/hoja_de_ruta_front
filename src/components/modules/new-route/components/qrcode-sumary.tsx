@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useQrContext } from "@/components/context/qr-context";
-import useTiposBultos from "@/api/tipos-bulto/hooks/useTiposbulto";
+import useTiposBultos from "@/api/tipos-bulto/hooks/useTiposBulto";
 
 const QRCodeSummary: React.FC = () => {
   const { qrCodes } = useQrContext();
@@ -10,7 +10,8 @@ const QRCodeSummary: React.FC = () => {
 
   // Agrupa y cuenta los QR según su propiedad "tipoBultoId"
   const counts = qrCodes.reduce((acc, code) => {
-    const key = code.tipoBultoId;
+    if (code.tipoBultoId === undefined) return acc;
+    const key = String(code.tipoBultoId);
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

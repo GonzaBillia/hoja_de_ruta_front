@@ -4,15 +4,18 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from './components/context/theme-provider.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from './components/context/auth-context.tsx'
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <App />
-    </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <App />
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

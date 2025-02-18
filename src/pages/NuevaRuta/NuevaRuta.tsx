@@ -3,19 +3,19 @@ import SelectRepartidor from "@/components/modules/new-route/components/select-r
 import SelectSucursal from "@/components/modules/new-route/components/select-sucursal";
 import QRCodeChips from "@/components/modules/new-route/components/qrcode-chips";
 import { Repartidor } from "@/api/repartidor/types/repartidor.types";
-import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useQrContext } from "@/components/context/qr-context";
 import { RouteSheet } from "@/api/route-sheets/types/route-sheets.types";
 import { Button } from "@/components/ui/button";
 import useCreateRouteSheet from "@/api/route-sheets/hooks/useCreateRouteSheet";
 import { useToast } from "@/hooks/use-toast";
+import { RemitoQuantio } from "@/api/remito/types/remito.types";
 
 const NuevaRuta = () => {
   const [routeData, setRouteData] = useState<RouteSheet | null>(null);
   const [notReady, setNotReady] = useState<boolean>(true)
   const [selectedRepartidor, setSelectedRepartidor] = useState<Repartidor | null>(null);
   const [selectedSucursalId, setSelectedSucursalId] = useState<number | null>(null);
-  const [selectedRemitos, setSelectedRemitos] = useState<QrData[]>([]);
+  const [selectedRemitos, setSelectedRemitos] = useState<RemitoQuantio[]>([]);
   const { qrCodes, clearQrCodes } = useQrContext();
   const { toast } = useToast()
 
@@ -95,7 +95,7 @@ const NuevaRuta = () => {
           <SelectSucursal
             repartidorId={selectedRepartidor.id}
             onSucursalSelect={(id) => setSelectedSucursalId(id)}
-            onRemitosSelect={(remitos) => setSelectedRemitos(remitos)}
+            onRemitosSelect={(remitosData) => setSelectedRemitos(remitosData)}
           />
           {selectedRemitos.length > 0 && (
             <QRCodeChips />

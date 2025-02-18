@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ROUTES } from "./routeConfig.ts";
 import { RedirectIfAuthenticated } from "@/components/modules/login/wrapper/authenticated.tsx";
 import FullScreenLoader from "@/components/common/loader/FSLoader.tsx";
+import { ProtectedRoute } from "@/components/modules/auth/protectedRouteWrapper.tsx";
 
 const LoginPage = lazy(() => import("@/pages/Login/LoginPage.tsx") )
 const DashboardLayout = lazy(() => import ("@/layouts/Dashboard.tsx"))
@@ -22,7 +23,14 @@ export const AppRoute = () => {
                     } />
                     <Route path={ROUTES.MAIN} element={<DashboardLayout />}>
                         <Route path={ROUTES.MAIN} element={<HojasRuta />} />
-                        <Route path={ROUTES.NUEVA} element={<NuevaRuta />} />
+                        <Route
+                            path={ROUTES.NUEVA}
+                            element={
+                                <ProtectedRoute requiredRole={["superadmin", "deposito"]}>
+                                <NuevaRuta />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route path={ROUTES.HOJA} element={<DetalleHojaRuta />} />
                     </Route>
                 </Routes>

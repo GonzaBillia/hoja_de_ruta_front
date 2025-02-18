@@ -15,6 +15,8 @@ import useRouteSheet from "@/api/route-sheets/hooks/useRouteSheet";
 import useBultoByCode from "@/api/bulto/hooks/useBultoByCode";
 import useTiposBultos from "@/api/tipos-bulto/hooks/useTiposBulto";
 import { TipoBulto } from "@/api/tipos-bulto/types/tiposBulto.types";
+import useEstados from "@/api/estado/hooks/useEstados";
+import { Estado } from "@/api/estado/types/estado.types";
 
 interface QrModalInfoProps {
   qrData: QrData;
@@ -27,6 +29,7 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
   // Llamadas a hooks para obtener información general
   const { data: tiposBultos } = useTiposBultos();
   const { data: deposito } = useDeposito(qrData?.depositId || 0);
+  const { data: estados } = useEstados()
 
   // Hook para buscar el bulto asociado al QR
   const { data: bulto, refetch: refetchBultos } = useBultoByCode(qrData.codigo);
@@ -51,6 +54,11 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
     bulto && tiposBultos
       ? tiposBultos.find((tipo: TipoBulto) => tipo.codigo === qrData.tipoBultoCode)?.nombre
       : undefined;
+
+    const estadoNombre =
+      estados && routeSheet
+        ? estados.find((est: Estado) => est.id === routeSheet.estado_id)?.nombre
+        : undefined;
   const handleClose = () => {
     setOpen(false);
     if (onClose) onClose();
@@ -104,7 +112,7 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
                   <span className="font-semibold">Código:</span> {routeSheet.codigo}
                 </p>
                 <p>
-                  <span className="font-semibold">Estado:</span> {routeSheet.estado_id}
+                  <span className="font-semibold">Estado:</span> {estadoNombre}
                 </p>
                 <p>
                   <span className="font-semibold">Creado:</span>{" "}
@@ -113,6 +121,10 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
                 <p>
                   <span className="font-semibold">Enviado:</span>{" "}
                   {routeSheet.sent_at ? new Date(routeSheet.sent_at).toLocaleString() : "No enviado"}
+                </p>
+                <p>
+                  <span className="font-semibold">Recibido:</span>{" "}
+                  {routeSheet.received_at ? new Date(routeSheet.received_at).toLocaleString() : "No recibido"}
                 </p>
                 <p>
                   <span className="font-semibold">Depósito:</span>{" "}

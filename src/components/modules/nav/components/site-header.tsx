@@ -18,10 +18,12 @@ import React from "react"
 import { Link, useLocation } from "react-router-dom"
 import NewRouteSheetButton from "./create-route-sheet-button"
 import { ROUTES } from "@/routes/routeConfig"
+import { useAuth } from "@/components/context/auth-context"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
   const location = useLocation();
+  const {isAuthorized} = useAuth()
 
   const pathnames = location.pathname.split("/").filter((x) => x);
   const breadcrumbs = [
@@ -70,7 +72,7 @@ export function SiteHeader() {
         </Breadcrumb>
       </div>
       <div className="flex items-center gap-4">
-        <NewRouteSheetButton />
+        {isAuthorized(['deposito', 'superadmin']) && <NewRouteSheetButton />}
         <ModeToggle />
       </div>
     </header>

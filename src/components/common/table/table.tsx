@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import EditarHojaRuta from "@/pages/HojasRuta/components/EditarHojaRuta"
+import GeneratePDFRouteSheet from "@/pages/HojasRuta/components/generateRouteSheetPDF"
 
 function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
   return columnNames.map((columnName) => ({
@@ -122,16 +123,23 @@ export default function TablaGenerica<T>({
   onPageChange,
 }: TablaGenericaProps<T>) {
   const navigate = useNavigate()
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [sorting] = React.useState<SortingState>([])
+  const [columnFilters] = React.useState<ColumnFiltersState>([])
   const [rowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
+  const [columnVisibility] = React.useState<VisibilityState>(
     Object.fromEntries(columnNames.map((col) => [col.key, true]))
   )
 
   // Estados para el modal de edición
   const [editModalOpen, setEditModalOpen] = React.useState(false)
   const [selectedRowData, setSelectedRowData] = React.useState<any>(null)
+  // Estado para activar la generación del PDF
+  const [pdfCodigo, setPdfCodigo] = React.useState<string | null>(null)
+
+  const handleDownloadPDF = (row: T) => {
+    const rowData = row as any
+    setPdfCodigo(rowData.codigo)
+  }
 
   const handleClick = (action: string, row: any) => {
     const { codigo } = row
@@ -169,6 +177,15 @@ export default function TablaGenerica<T>({
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                console.log("Descargar PDF clickeado", row.original)
+                handleDownloadPDF(row.original)
+              }}
+            >
+              Descargar PDF
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
@@ -237,9 +254,9 @@ export default function TablaGenerica<T>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -281,6 +298,14 @@ export default function TablaGenerica<T>({
         )}
       </div>
 
+      {/* Genera el PDF cuando pdfCodigo tiene valor */}
+      {pdfCodigo && (
+        <GeneratePDFRouteSheet
+          codigo={pdfCodigo}
+          onComplete={() => setPdfCodigo(null)}
+        />
+      )}
+
       {/* Modal de Edición */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent>
@@ -291,7 +316,7 @@ export default function TablaGenerica<T>({
             <EditarHojaRuta
               codigo={selectedRowData.codigo}
               onUpdated={() => {
-                setEditModalOpen(false);
+                setEditModalOpen(false)
                 // Aquí puedes agregar lógica adicional, por ejemplo refrescar la tabla.
               }}
               setEditModalOpen={setEditModalOpen}
@@ -300,7 +325,6 @@ export default function TablaGenerica<T>({
           )}
         </DialogContent>
       </Dialog>
-
     </div>
   )
 }

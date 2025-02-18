@@ -18,6 +18,7 @@ import { Repartidor } from "@/api/repartidor/types/repartidor.types";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { RemitoQuantio } from "@/api/remito/types/remito.types";
 import { useQrContext } from "@/components/context/qr-context";
+import { useAuth } from "@/components/context/auth-context";
 
 type EditAction = "estado" | "modificar";
 
@@ -46,6 +47,7 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
   const [estadoId, setEstadoId] = useState<number | undefined>(undefined);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { isAuthorized } = useAuth()
 
   // Para la acción "modificar": usaremos QrData[] para manejar los remitos seleccionados.
   const [selectedRemitos, setSelectedRemitos] = useState<RemitoQuantio[]>([]);
@@ -156,13 +158,15 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
         >
           Cambiar Estado
         </Button>
-        <Button
+        { isAuthorized(['superadmin', 'deposito']) && (
+          <Button
           variant={action === "modificar" ? "default" : "outline"}
           onClick={() => setAction("modificar")}
           disabled={currentStateId !== 1}
         >
           Modificar Hoja
         </Button>
+        )}
       </div>
       {action === "estado" ? (
         <EstadoEditor estadoId={estadoId} onChange={setEstadoId} />
