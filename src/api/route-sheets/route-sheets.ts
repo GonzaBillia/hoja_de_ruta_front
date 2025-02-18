@@ -51,10 +51,10 @@ export const createRouteSheet = async (
 
 // Función para actualizar una hoja de ruta completa.
 export const updateRouteSheet = async (
-  id: number,
+  codigo: string,
   payload: UpdateRouteSheetPayload
 ): Promise<RouteSheet> => {
-  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${id}`, payload);
+  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${codigo}`, payload);
   return response.data.data;
 };
 
@@ -66,9 +66,9 @@ export const deleteRouteSheet = async (id: number): Promise<{ message: string }>
 
 // Función para actualizar solo el estado de la hoja de ruta.
 export const updateRouteSheetState = async (
-  id: number,
+  codigo: string,
   payload: UpdateRouteSheetStatePayload
 ): Promise<RouteSheet> => {
-  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${id}/state`, payload);
+  const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${codigo}/state`, payload);
   return response.data.data;
 };

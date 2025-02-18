@@ -7,6 +7,7 @@ import {
 import { useQrContext } from "@/components/context/qr-context";
 import { QrData, QrScannerProps } from "./types/qr-scanner";
 import { useToast } from "@/hooks/use-toast";
+import { ROUTES } from "@/routes/routeConfig";
 
 const QrScanner: React.FC<QrScannerProps> = ({
   onScanSuccess,
@@ -58,7 +59,7 @@ const QrScanner: React.FC<QrScannerProps> = ({
 
             // Validar si el código ya fue leído
             const duplicate = qrCodes.some((qr) => qr.codigo === data.codigo);
-            if (duplicate) {
+            if (duplicate && location.pathname === ROUTES.NUEVA) {
               const duplicateMessage = `Código QR duplicado: ${data.codigo}`;
               if (onScanError) {
                 onScanError(duplicateMessage);

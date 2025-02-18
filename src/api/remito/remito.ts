@@ -18,6 +18,12 @@ export const getRemitosQuantio = async (): Promise<any[]> => {
   return response.data.data;
 };
 
+// Obtiene los remitos del día actual (ruta /quantio)
+export const getRemitosQuantioByDate = async (date: Date | string): Promise<any[]> => {
+  const response = await apiClient.get(`${API_URL}/quantio/date/${date}`);
+  return response.data.data;
+};
+
 // Obtiene un remito por su ID
 export const getRemitoById = async (id: number): Promise<Remito> => {
   const response = await apiClient.get(`${API_URL}/${id}`);

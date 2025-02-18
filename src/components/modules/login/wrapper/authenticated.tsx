@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCurrentUser from '@/api/auth/hooks/use-current-user';
+import FullScreenLoader from '@/components/common/loader/FSLoader';
 
 interface RedirectIfAuthenticatedProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ export const RedirectIfAuthenticated: React.FC<RedirectIfAuthenticatedProps> = (
   }, [isLoading, user, navigate]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <FullScreenLoader />;
   }
 
   return <>{children}</>;

@@ -6,4 +6,10 @@ export interface Remito {
     createdAt?: string;
     updatedAt?: string;
   }
+
+export interface RemitoQuantio {
+  CliApeNom?: string;
+  // Propiedad para identificar el QR (se usa en el key y comparación)
+  Numero: string;
+}
   

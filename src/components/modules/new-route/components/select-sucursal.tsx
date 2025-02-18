@@ -9,12 +9,12 @@ import {
 import { useSucursalesByRepartidor } from "@/api/sucursal/hooks/useSucursalesRepartidor";
 import { Sucursal } from "@/api/sucursal/types/sucursal.types";
 import SelectRemitos from "./select-remitos";
-import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
+import { RemitoQuantio } from "@/api/remito/types/remito.types";
 
 interface SelectSucursalProps {
   repartidorId: number;
   onSucursalSelect?: (sucursalId: number) => void;
-  onRemitosSelect?: (remitos: QrData[]) => void;
+  onRemitosSelect?: (remitos: RemitoQuantio[]) => void;
 }
 
 const SelectSucursal: React.FC<SelectSucursalProps> = ({
@@ -62,7 +62,7 @@ const SelectSucursal: React.FC<SelectSucursalProps> = ({
           {/* Se integra el componente para seleccionar remitos */}
           <SelectRemitos
             sucursalNombre={selectedSucursal.nombre}
-            onChange={(remitos: QrData[]) => {
+            onChange={(remitos: RemitoQuantio[]) => {
               if (onRemitosSelect) {
                 onRemitosSelect(remitos);
               }
