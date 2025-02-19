@@ -118,7 +118,6 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
           remitos: payloadRemitos.map((r) => r.external_id),
           scannedQRCodes: qrCodes
         };
-        console.log(payload)
         await modifyMutation.mutateAsync(payload);
         toast({
           title: "Actualizado",

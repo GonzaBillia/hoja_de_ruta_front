@@ -3,5 +3,11 @@ export const ROUTES = {
     MAIN: "/",
     HOME: "/home",
     HOJA: "/detalle/:codigo",
-    NUEVA: "/nueva-ruta"
+    NUEVA: "/nueva-ruta",
+    OBS: "/observaciones",
+    DEPOS: "/depositos",
+    SUCUS: "/sucursales",
+    USERS: "/usuarios",
+    ESTADOS: "/estados",
+    QR: "/qr-generador"
 }

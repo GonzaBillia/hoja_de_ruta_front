@@ -4,6 +4,7 @@
 import React, { createContext, useContext } from 'react';
 import useCurrentUser from '@/api/auth/hooks/use-current-user';
 import { User } from '@/api/auth/types/auth.types';
+import FullScreenLoader from '../common/loader/FSLoader';
 
 type AuthContextType = {
     user: User | null;
@@ -37,7 +38,7 @@ type AuthContextType = {
       };
       
   
-    if (isLoading) return <div>Cargando...</div>;
+    if (isLoading) return <FullScreenLoader />;
   
     return (
       <AuthContext.Provider value={{ user, isAuthorized }}>

@@ -55,7 +55,6 @@ const NuevaRuta = () => {
     createRouteSheet(payload, {
       onSuccess: (data) => {
         setRouteData(data);
-        console.log(routeData)
         handleClear()
       },
       onError: (error) => {

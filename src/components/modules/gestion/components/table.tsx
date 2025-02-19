@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Plus } from "lucide-react"
 import { VisibilityState } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,9 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import FiltroTabla from "./filtro-table"
-import PaginacionTabla from "./paginacion-table"
-import { ColumnName, TablaGenericaProps } from "./types/table"
+import FiltroTabla from "@/components/common/table/filtro-table"
+import PaginacionTabla from "@/components/common/table/paginacion-table"
+import { ColumnName, TablaGenericaProps } from "@/components/common/table/types/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,9 +39,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import EditarHojaRuta from "@/pages/HojasRuta/components/EditarHojaRuta"
 import GeneratePDFRouteSheet from "@/pages/HojasRuta/components/generateRouteSheetPDF"
-import { useAuth } from "@/components/context/auth-context"
+
+// Extiende la interfaz de props para incluir los componentes de edición, detalles y creación.
+export interface TablaGenericaPropsExtended<T> extends TablaGenericaProps<T> {
+  EditComponent?: React.ComponentType<{ rowData: T; open: boolean; onClose: () => void }>;
+  DetailComponent?: React.ComponentType<{ rowData: T; open: boolean; onClose: () => void }>;
+  CreateComponent?: React.ComponentType<{ open: boolean; onClose: () => void }>;
+}
 
 function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
   return columnNames.map((columnName) => ({
@@ -111,7 +116,7 @@ function createColumns<T>(columnNames: ColumnName[]): ColumnDef<T>[] {
   }))
 }
 
-export default function TablaGenerica<T>({
+export default function TablaGenericaGestion<T>({
   data = [],
   columnNames,
   showActions = true,
@@ -122,7 +127,11 @@ export default function TablaGenerica<T>({
   pageCount = 1,
   currentPage = 1,
   onPageChange,
-}: TablaGenericaProps<T>) {
+  // Nuevos componentes opcionales para edición, detalles y creación
+  EditComponent,
+  DetailComponent,
+  CreateComponent,
+}: TablaGenericaPropsExtended<T>) {
   const navigate = useNavigate()
   const [sorting] = React.useState<SortingState>([])
   const [columnFilters] = React.useState<ColumnFiltersState>([])
@@ -131,26 +140,31 @@ export default function TablaGenerica<T>({
     Object.fromEntries(columnNames.map((col) => [col.key, true]))
   )
 
-  // Estados para el modal de edición
+  // Estados para los modales de edición, detalles y creación
   const [editModalOpen, setEditModalOpen] = React.useState(false)
+  const [detailModalOpen, setDetailModalOpen] = React.useState(false)
+  const [createModalOpen, setCreateModalOpen] = React.useState(false)
   const [selectedRowData, setSelectedRowData] = React.useState<any>(null)
   // Estado para activar la generación del PDF
   const [pdfCodigo, setPdfCodigo] = React.useState<string | null>(null)
-  const { isAuthorized } = useAuth()
 
-  const handleDownloadPDF = (row: T) => {
-    const rowData = row as any
-    setPdfCodigo(rowData.codigo)
-  }
-
+  // La función handleClick usa los componentes pasados o, en su defecto, comportamientos por defecto.
   const handleClick = (action: string, row: any) => {
-    const { codigo } = row
+    const { id } = row
     if (action === "view") {
-      navigate(`/detalle/${codigo}`)
+      if (DetailComponent) {
+        setSelectedRowData(row)
+        setDetailModalOpen(true)
+      } else {
+        navigate(`/detalle/${id}`)
+      }
     } else if (action === "edit") {
-      // Abrir modal de edición en lugar de navegar
-      setSelectedRowData(row)
-      setEditModalOpen(true)
+      if (EditComponent) {
+        setSelectedRowData(row)
+        setEditModalOpen(true)
+      } else {
+        navigate(`/editar/${id}`)
+      }
     }
   }
 
@@ -182,21 +196,12 @@ export default function TablaGenerica<T>({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
-                handleDownloadPDF(row.original)
-              }}
-            >
-              Descargar PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
                 handleClick("view", row.original)
               }}
             >
               Detalles
             </DropdownMenuItem>
-            {isAuthorized(["superadmin", "deposito", "sucursal"]) && (
-              <DropdownMenuItem
+            <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
                 handleClick("edit", row.original)
@@ -204,7 +209,6 @@ export default function TablaGenerica<T>({
             >
               Editar
             </DropdownMenuItem>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -235,7 +239,16 @@ export default function TablaGenerica<T>({
     <div className="flex w-full h-full flex-grow">
       <div className="transition-all w-full h-full">
         <div className="flex flex-col items-center sm:flex-row sm:justify-between gap-4 py-4">
+          
           {showFilter && <FiltroTabla table={table} />}
+          <div className="flex flex-col items-center sm:flex-row sm:justify-between gap-4">
+            {/* Botón de crear nuevo */}
+          {CreateComponent && (
+            <Button variant="outline" onClick={() => setCreateModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo
+            </Button>
+          )}
           {showPagination && manualPagination && onPageChange && (
             <div className="hidden sm:block">
               <PaginacionTabla
@@ -246,6 +259,7 @@ export default function TablaGenerica<T>({
               />
             </div>
           )}
+          </div>
         </div>
         <div className="rounded-md border w-full overflow-x-auto">
           <Table className="min-w-full">
@@ -310,24 +324,55 @@ export default function TablaGenerica<T>({
       )}
 
       {/* Modal de Edición */}
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Hoja de Ruta</DialogTitle>
-          </DialogHeader>
-          {selectedRowData && (
-            <EditarHojaRuta
-              codigo={selectedRowData.codigo}
-              onUpdated={() => {
-                setEditModalOpen(false)
-                // Aquí puedes agregar lógica adicional, por ejemplo refrescar la tabla.
-              }}
-              setEditModalOpen={setEditModalOpen}
-              currentStateId={selectedRowData.estado_id}
+      {EditComponent && (
+        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar</DialogTitle>
+            </DialogHeader>
+            {selectedRowData && (
+              <EditComponent
+                rowData={selectedRowData}
+                open={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal de Detalles */}
+      {DetailComponent && (
+        <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Detalles</DialogTitle>
+            </DialogHeader>
+            {selectedRowData && (
+              <DetailComponent
+                rowData={selectedRowData}
+                open={detailModalOpen}
+                onClose={() => setDetailModalOpen(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal de Creación */}
+      {CreateComponent && (
+        <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crear Nuevo</DialogTitle>
+            </DialogHeader>
+            <CreateComponent
+              open={createModalOpen}
+              onClose={() => setCreateModalOpen(false)}
             />
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

@@ -4,7 +4,6 @@ import { AppSidebar } from "@/components/modules/nav/app-sidebar"
 import { SiteHeader } from "@/components/modules/nav/components/site-header"
 import QrModal from "@/components/modules/qr-scanner/qr-modal"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Toaster } from "@/components/ui/toaster"
 import { useEffect } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
 
@@ -30,7 +29,7 @@ export default function DashboardLayout() {
                   <div className="h-full overflow-auto flex flex-1">
                     <Outlet />
                   </div>
-                  <Toaster />
+                  
                 </SidebarInset>
                 <QrModal />
               </div>

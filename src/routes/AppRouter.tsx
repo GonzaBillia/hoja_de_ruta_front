@@ -4,12 +4,15 @@ import { ROUTES } from "./routeConfig.ts";
 import { RedirectIfAuthenticated } from "@/components/modules/login/wrapper/authenticated.tsx";
 import FullScreenLoader from "@/components/common/loader/FSLoader.tsx";
 import { ProtectedRoute } from "@/components/modules/auth/protectedRouteWrapper.tsx";
+import Sucursales from "@/pages/Sucursales/Sucursales.tsx";
+import Depositos from "@/pages/Depositos/Depositos.tsx";
 
 const LoginPage = lazy(() => import("@/pages/Login/LoginPage.tsx") )
 const DashboardLayout = lazy(() => import ("@/layouts/Dashboard.tsx"))
 const HojasRuta = lazy(() => import ("@/pages/HojasRuta/HojasRuta.tsx"))
 const NuevaRuta = lazy(() => import ("@/pages/NuevaRuta/NuevaRuta.tsx"))
 const DetalleHojaRuta = lazy (() => import ("@/pages/DetallehojasRuta/detalleHojasRuta.tsx"))
+const ObservacionesRuta = lazy(() => import ("@/pages/Observaciones/Observaciones.tsx"))
 
 export const AppRoute = () => {
     return (
@@ -32,6 +35,27 @@ export const AppRoute = () => {
                             }
                         />
                         <Route path={ROUTES.HOJA} element={<DetalleHojaRuta />} />
+                        <Route path={ROUTES.OBS} element={
+                            <ProtectedRoute requiredRole={["superadmin", "deposito"]}>
+                                <ObservacionesRuta />
+                            </ProtectedRoute>
+                        } />
+                        <Route
+                            path={ROUTES.SUCUS}
+                            element={
+                                <ProtectedRoute requiredRole={["superadmin"]}>
+                                <Sucursales />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.DEPOS}
+                            element={
+                                <ProtectedRoute requiredRole={["superadmin"]}>
+                                <Depositos />
+                                </ProtectedRoute>
+                            }
+                        />
                     </Route>
                 </Routes>
             </Suspense>

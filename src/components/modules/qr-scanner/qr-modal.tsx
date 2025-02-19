@@ -26,7 +26,6 @@ const QrModal: React.FC = () => {
   };
 
   const handleQrScanSuccess = (data: QrData) => {
-    console.log("Datos parseados del QR:", data);
     setOpen(false); // Cierra el modal del scanner
     if (location.pathname !== ROUTES.NUEVA) {
       setQrData(data); // Guarda los datos del QR para renderizar el modal de información

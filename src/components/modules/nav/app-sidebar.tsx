@@ -1,11 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Command,
-  Frame
-} from "lucide-react"
-
+import { Command } from "lucide-react"
 import { NavProjects } from "@/components/modules/nav/nav-projects"
 import { NavUser } from "@/components/modules/nav/nav-user"
 import {
@@ -21,15 +17,8 @@ import useCurrentUser from "@/api/auth/hooks/use-current-user"
 import { Link } from "react-router-dom"
 import { ROUTES } from "@/routes/routeConfig"
 import { AppSidebarSkeleton } from "./components/sidebar-skeleton"
+import { data } from "./components/modules"
 
-const data = {
-
-  projects: [
-    { name: "Hojas de Ruta", url: ROUTES.MAIN, icon: Frame },
-    //{ name: "Sales & Marketing", url: "#", icon: PieChart },
-    //{ name: "Travel", url: "#", icon: Map },
-  ],
-}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userData, isLoading } = useCurrentUser()
@@ -38,10 +27,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return <AppSidebarSkeleton />
   }
 
-  // Si no se obtuvo usuario, puedes mostrar un mensaje o simplemente no renderizar la sidebar
+  // Si no se obtuvo usuario, se muestra un mensaje o se puede redirigir
   if (!userData) {
     return <div>No se pudo cargar el usuario.</div>
   }
+
+  // Filtramos los proyectos según el rol del usuario.
+  const allowedProjects = data.projects.filter((project) => {
+    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
+    if (!project.allowedRoles) return true;
+    return project.allowedRoles.includes(userData.role?.name);
+  });
+
+  const allowedGestiones = data.gestiones.filter((gestion) => {
+    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
+    if (!gestion.allowedRoles) return true;
+    return gestion.allowedRoles.includes(userData.role?.name);
+  });
+
+  const allowedTools = data.tools.filter((tool) => {
+    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
+    if (!tool.allowedRoles) return true;
+    return tool.allowedRoles.includes(userData.role?.name);
+  });
 
   return (
     <Sidebar
@@ -70,7 +78,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavProjects projects={data.projects} />
+        <NavProjects projects={allowedProjects} title="Menu" />
+        <NavProjects projects={allowedGestiones} title="Gestión" />
+        <NavProjects projects={allowedTools} title="Utilidades" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

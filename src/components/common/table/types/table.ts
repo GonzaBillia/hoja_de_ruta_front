@@ -3,7 +3,7 @@
 export type ColumnName = {
     key: string;
     label: string;
-    opcional: boolean;
+    opcional?: boolean;
   };
   
   export interface TablaGenericaProps<T> {
