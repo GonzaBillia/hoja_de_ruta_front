@@ -9,7 +9,7 @@ import {
   CommandGroup,
 } from "@/components/ui/command";
 import { useRepartidores } from "@/api/repartidor/hooks/useRepartidores";
-import useRepartidorSucursales from "@/api/repartidor-sucursal/hooks/useRepartidorSucursales";
+import useRepartidorSucursales from "@/api/repartidor-sucursal/hooks/useRepartidoresSucursales";
 import { Repartidor } from "@/api/repartidor/types/repartidor.types";
 import { cn } from "@/lib/utils";
 

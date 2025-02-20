@@ -1,4 +1,3 @@
-// hooks/useTransformedRouteSheets.ts
 import { useMemo } from "react";
 import { RouteSheet } from "@/api/route-sheets/types/route-sheets.types";
 import useRouteSheets from "@/api/route-sheets/hooks/useRouteSheets";
@@ -20,7 +19,6 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
   const routeSheets = useMemo(() => {
     return routeSheetsResponse?.data || [];
   }, [routeSheetsResponse]);
-
   const transformedData = useMemo(() => {
     if (!routeSheets || !sucursales || !depositos || !bultos || !repartidores) return [];
 
@@ -40,10 +38,37 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
       const repartidorName = rs.repartidor_id !== undefined && rs.repartidor_id !== null
         ? (repartidorMap.get(rs.repartidor_id) || "Desconocido")
         : "Desconocido";
-
-      // Contar los bultos asociados filtrando por route_sheet_id.
-      const bultosCount = bultos.filter(b => b.route_sheet_id === rs.id).length;
-
+    
+      // Filtrar todos los bultos que estén asignados actualmente o tengan en su historial este route sheet
+      const bultosForRS = bultos.filter(b => {
+        const isCurrent = b.route_sheet_id === rs.id;
+        // Se asume que los atributos del join se encuentran en b.historyRouteSheets[i].BultoRouteSheet
+        const isInHistory = b.historyRouteSheets &&
+          Array.isArray(b.historyRouteSheets) &&
+          b.historyRouteSheets.some((hist: any) => 
+            hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === rs.id
+          );
+        return isCurrent || isInHistory;
+      });
+      const bultosCount = bultosForRS.length;
+    
+      // Mapear la información del historial para cada bulto que se asocie a este route sheet
+      const bultosHistorial = bultosForRS.map(b => {
+        // Extraer solo las asignaciones (del join) que correspondan a este route sheet
+        const historyRecords = (b.historyRouteSheets || []).filter((hist: any) =>
+          hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === rs.id
+        );
+        return {
+          id: b.id,
+          codigo: b.codigo,
+          historial: historyRecords.map((hist: any) => ({
+            routeSheetId: hist.BultoRouteSheet.route_sheet_id,
+            assignedAt: hist.BultoRouteSheet.assigned_at ? formatDate(hist.BultoRouteSheet.assigned_at) : 'N/A',
+            active: hist.BultoRouteSheet.active,
+          }))
+        };
+      });
+    
       // Prioridad de fecha: Recepción > Envío > Creación.
       let dateValue = null;
       let dateType = "";
@@ -60,25 +85,30 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
         dateType = "N/A";
       }
       const displayDate = dateValue ? formatDate(dateValue) : "N/A";
-
+    
       // Estado basado en la fecha, siguiendo la misma prioridad.
       const estadoDisplay = rs.received_at
         ? "Recibido"
         : rs.sent_at
         ? "Enviado"
         : "Creado";
-
+    
       return {
         ...rs,
         deposito: depositoName,
         sucursal: sucursalName,
         repartidor: repartidorName,
         bultosCount,
+        // Puedes mantener ambos si necesitas mostrar los bultos actuales (p.ej. con asignación directa)
+        currentBultos: bultos.filter(b => b.route_sheet_id === rs.id),
+        bultosHistorial,
         displayDate,
         displayDateType: dateType,
         estadoDisplay,
       };
     });
+    
+
   }, [routeSheets, sucursales, depositos, bultos, repartidores]);
 
   return {

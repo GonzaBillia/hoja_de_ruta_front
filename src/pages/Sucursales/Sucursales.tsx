@@ -1,8 +1,8 @@
 import TablaGenericaGestion from "@/components/modules/gestion/components/table"
-import DetalleSucursal from "./DetalleSucursal"
-import EditarSucursal from "./EditarSucursal"
+import DetalleSucursal from "./components/DetalleSucursal"
+import EditarSucursal from "./components/EditarSucursal"
 import useSucursalesData from "./hooks/useSucursalesData"
-import CrearSucursal from "./CrearSucursal"
+import CrearSucursal from "./components/CrearSucursal"
 
 
 const Sucursales = () => {

@@ -90,11 +90,6 @@ const SelectRepartidor: React.FC<SelectRepartidorProps> = ({ selectedRepartidor,
           </CommandGroup>
         </CommandList>
       </Command>
-      {selectedRepartidor && (
-        <div className="mt-2 text-sm">
-          <strong>Seleccionado:</strong> {selectedRepartidor.username}
-        </div>
-      )}
     </div>
   );
 };

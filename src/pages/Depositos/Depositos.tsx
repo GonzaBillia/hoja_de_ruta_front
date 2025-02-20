@@ -1,8 +1,8 @@
 import TablaGenericaGestion from "@/components/modules/gestion/components/table"
 import useDepositosData from "./hooks/useDepositosData"
-import DetalleDeposito from "./DetalleDeposito"
-import EditarDeposito from "./EditarDeposito"
-import CrearDeposito from "./CrearDeposito"
+import DetalleDeposito from "./components/DetalleDeposito"
+import EditarDeposito from "./components/EditarDeposito"
+import CrearDeposito from "./components/CrearDeposito"
 
 
 const Depositos = () => {

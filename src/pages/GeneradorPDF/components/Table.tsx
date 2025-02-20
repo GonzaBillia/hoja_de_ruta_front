@@ -22,9 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import FiltroTabla from "./filtro-table"
-import PaginacionTabla from "./paginacion-table"
-import { ColumnName, TablaGenericaProps } from "./types/table"
+import FiltroTabla from "@/components/common/table/filtro-table"
+import PaginacionTabla from "@/components/common/table/paginacion-table"
+import { ColumnName, TablaGenericaProps } from "@/components/common/table/types/table"
 import {
   DropdownMenu,
   DropdownMenuContent,

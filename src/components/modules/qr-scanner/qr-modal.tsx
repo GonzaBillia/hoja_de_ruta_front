@@ -15,6 +15,7 @@ import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { ROUTES } from "@/routes/routeConfig";
 import { useLocation } from "react-router-dom";
 import QrModalInfo from "./qr-modal-info";
+import QrManualInput from "./qr-manual-input";
 
 const QrModal: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -52,11 +53,14 @@ const QrModal: React.FC = () => {
           <div className="py-4 flex justify-center">
             {/* Renderiza el QrScanner solo cuando el modal está abierto */}
             {open && (
-              <QrScanner
-                onScanSuccess={handleQrScanSuccess}
-                width={300}
-                height={300}
-              />
+              <div className="flex flex-col justify-center">
+                <QrScanner
+                  onScanSuccess={handleQrScanSuccess}
+                  width={300}
+                  height={300}
+                />
+                <QrManualInput onSuccess={handleQrScanSuccess}/>
+              </div>
             )}
           </div>
           <DialogFooter>

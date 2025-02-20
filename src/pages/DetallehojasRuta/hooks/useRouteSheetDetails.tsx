@@ -1,4 +1,3 @@
-// hooks/useTransformedRouteSheet.ts
 import { useMemo } from "react";
 import useSucursales from "@/api/sucursal/hooks/useSucursales";
 import useDepositos from "@/api/deposito/hooks/useDepositos";
@@ -50,8 +49,16 @@ export const useTransformedRouteSheet = (codigo: string) => {
         ? estadoMap.get(routeSheet.estado_id) || "Desconocido"
         : "Desconocido";
 
-    // Filtrar los bultos asociados a la hoja de ruta
-    const associatedBultos = bultos.filter(b => b.route_sheet_id === routeSheet.id);
+    // Filtrar los bultos asociados a esta hoja de ruta: se incluye si es asignación actual o si aparece en el historial.
+    const associatedBultos = bultos.filter(b => {
+      const isCurrent = b.route_sheet_id === routeSheet.id;
+      const isInHistory = b.historyRouteSheets &&
+        Array.isArray(b.historyRouteSheets) &&
+        b.historyRouteSheets.some((hist: any) => 
+          hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === routeSheet.id
+        );
+      return isCurrent || isInHistory;
+    });
 
     // Formatear las fechas
     const createdAtFormatted = routeSheet.created_at ? formatDate(routeSheet.created_at) : "N/A";

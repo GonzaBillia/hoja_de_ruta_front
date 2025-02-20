@@ -17,6 +17,13 @@ export const getRepartidorSucursal = async (
   return response.data.data;
 };
 
+export const getRepartidorSucursales = async (
+  user_id: number
+): Promise<RepartidorSucursal[]> => {
+  const response = await apiClient.get<{ success: boolean; data: RepartidorSucursal[] }>(`/api/rep-sucu/${user_id}`);
+  return response.data.data;
+};
+
 // Crear una nueva asociación (solo para superadmin)
 export const createRepartidorSucursal = async (
   payload: CreateRepartidorSucursalPayload

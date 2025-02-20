@@ -6,6 +6,7 @@ import FullScreenLoader from "@/components/common/loader/FSLoader.tsx";
 import { ProtectedRoute } from "@/components/modules/auth/protectedRouteWrapper.tsx";
 import Sucursales from "@/pages/Sucursales/Sucursales.tsx";
 import Depositos from "@/pages/Depositos/Depositos.tsx";
+import Usuarios from "@/pages/Usuarios/Usuarios.tsx";
 
 const LoginPage = lazy(() => import("@/pages/Login/LoginPage.tsx") )
 const DashboardLayout = lazy(() => import ("@/layouts/Dashboard.tsx"))
@@ -13,6 +14,7 @@ const HojasRuta = lazy(() => import ("@/pages/HojasRuta/HojasRuta.tsx"))
 const NuevaRuta = lazy(() => import ("@/pages/NuevaRuta/NuevaRuta.tsx"))
 const DetalleHojaRuta = lazy (() => import ("@/pages/DetallehojasRuta/detalleHojasRuta.tsx"))
 const ObservacionesRuta = lazy(() => import ("@/pages/Observaciones/Observaciones.tsx"))
+const GeneradorPDF = lazy(() => import ("@/pages/GeneradorPDF/GeneradorPDF.tsx"))
 
 export const AppRoute = () => {
     return (
@@ -53,6 +55,22 @@ export const AppRoute = () => {
                             element={
                                 <ProtectedRoute requiredRole={["superadmin"]}>
                                 <Depositos />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.USERS}
+                            element={
+                                <ProtectedRoute requiredRole={["superadmin"]}>
+                                <Usuarios />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path={ROUTES.QR}
+                            element={
+                                <ProtectedRoute requiredRole={["superadmin"]}>
+                                <GeneradorPDF />
                                 </ProtectedRoute>
                             }
                         />

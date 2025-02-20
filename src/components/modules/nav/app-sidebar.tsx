@@ -18,10 +18,12 @@ import { Link } from "react-router-dom"
 import { ROUTES } from "@/routes/routeConfig"
 import { AppSidebarSkeleton } from "./components/sidebar-skeleton"
 import { data } from "./components/modules"
+import { useAuth } from "@/components/context/auth-context"
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userData, isLoading } = useCurrentUser()
+  const {isAuthorized} = useAuth()
 
   if (isLoading) {
     return <AppSidebarSkeleton />
@@ -79,8 +81,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavProjects projects={allowedProjects} title="Menu" />
-        <NavProjects projects={allowedGestiones} title="Gestión" />
-        <NavProjects projects={allowedTools} title="Utilidades" />
+        {isAuthorized(["superadmin"]) && (
+          <>
+          <NavProjects projects={allowedGestiones} title="Gestión" />
+          <NavProjects projects={allowedTools} title="Utilidades" />
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

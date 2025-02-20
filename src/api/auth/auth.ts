@@ -1,7 +1,11 @@
 // src/api/auth.js
 import apiClient from '../apiClient.ts';
-import { LoginCredentials, LoginResponse, User } from './types/auth.types.ts';
+import { LoginCredentials, LoginResponse, UpdateUserPayload, User } from './types/auth.types.ts';
 
+export const getAllUsers = async (): Promise<User[]> => {
+    const response = await apiClient.get<{ data: User[] }>("/api/auth");
+    return response.data.data;
+  };
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
 const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials);
@@ -24,4 +28,16 @@ export const fetchCurrentUser = async (): Promise<User | null> => {
         }
         throw error; // Otros errores se manejan normalmente
     }
+};
+
+export const updateUser = async (id: number, payload: UpdateUserPayload): Promise<User> => {
+    const response = await apiClient.put<{ data: User }>(`/api/auth/${id}`, payload);
+    return response.data.data as User;
+  };
+
+export const deleteUser = async (
+id: number
+): Promise<{ message: string }> => {
+const response = await apiClient.delete<{ success: boolean; data: { message: string } }>(`/api/auth/${id}`);
+return response.data.data;
 };

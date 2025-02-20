@@ -58,7 +58,6 @@ const SelectSucursal: React.FC<SelectSucursalProps> = ({
       </Select>
       {selectedSucursal && (
         <div className="mt-2 text-sm">
-          <strong>Seleccionado:</strong> {selectedSucursal.nombre}
           {/* Se integra el componente para seleccionar remitos */}
           <SelectRemitos
             sucursalNombre={selectedSucursal.nombre}
