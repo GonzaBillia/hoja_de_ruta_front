@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   InputOTP,
   InputOTPGroup,
@@ -11,6 +11,7 @@ import { getQRCodeById } from "@/api/qr-code/qrcode"; // asegúrate de la ruta c
 import { QRCode } from "@/api/qr-code/types/qrcode.types";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useToast } from "@/hooks/use-toast";
+import { useQrContext } from "@/components/context/qr-context";
 
 interface QrManualInputProps {
   onSuccess: (data: QrData) => void;
@@ -29,8 +30,10 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
 
   const { toast } = useToast();
 
+  const {qrCodes, addQrCode} = useQrContext()
+
   // Usamos useQuery con enabled: !!codeToFetch para que no haga fetch hasta que codeToFetch sea no vacío.
-  const { data, isLoading, error, refetch } = useQuery<QRCode>({
+  const {  isLoading,  refetch } = useQuery<QRCode>({
     queryKey: ["qrcode", codeToFetch],
     queryFn: () => getQRCodeById(codeToFetch),
     enabled: !!codeToFetch,
@@ -46,13 +49,33 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
       });
       return;
     }
-    // Convierte a mayúsculas y agrega los separadores.
     const upperCode = inputCode.toUpperCase();
     const finalCode = `${upperCode.slice(0, 2)}-${upperCode.slice(2, 4)}-${upperCode.slice(4)}`;
-    // Asignamos el código final al estado que activa la consulta.
     setCodeToFetch(finalCode);
     try {
-      await refetch();
+      const result = await refetch();
+      if (result.data) {
+        const qrData: QrData = { codigo: result.data.codigo, tipoBultoId: result.data.tipo_bulto_id, tipoBultoCode: upperCode.slice(2, 4), depositId: result.data.deposito_id, depositCode:upperCode.slice(0,2), serial: result.data.serial };
+        // Verificar duplicados (si el contexto ya tiene ese código)
+        const duplicate = qrCodes.some((qr) => qr.codigo === qrData.codigo);
+        if (duplicate) {
+          toast({
+            title: "Código duplicado",
+            description: `El código QR ${qrData.codigo} ya fue escaneado.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        toast({
+          title: "Escaneo exitoso",
+          description: `Código QR ${qrData.codigo} leído correctamente.`,
+          variant: "success",
+        });
+        onSuccess(qrData);
+        addQrCode(qrData);
+      } else {
+        throw new Error("No se encontró el código.");
+      }
     } catch (err: any) {
       toast({
         title: "Error en la validación",
@@ -62,23 +85,8 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
       if (onError) onError(err.message);
     }
   };
-
-  // Cuando se obtiene la respuesta del query, se procede.
-  useEffect(() => {
-    if (data) {
-      const qrData: QrData = { codigo: data.codigo };
-      onSuccess(qrData);
-    }
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      if (onError) onError(error.message);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, error]);
+  
+  
 
   return (
     <div className="mt-4 w-full flex flex-col items-center">
@@ -91,13 +99,13 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
         className="max-w-24"
       >
         <InputOTPGroup>
-          <InputOTPSlot index={0} className="h-6 w-6" />
-          <InputOTPSlot index={1} className="h-6 w-6" />
+          <InputOTPSlot index={0} className="h-6 w-6 capitalize" />
+          <InputOTPSlot index={1} className="h-6 w-6 capitalize" />
         </InputOTPGroup>
         <InputOTPSeparator />
         <InputOTPGroup>
-          <InputOTPSlot index={2} className="h-6 w-6" />
-          <InputOTPSlot index={3} className="h-6 w-6" />
+          <InputOTPSlot index={2} className="h-6 w-6 capitalize" />
+          <InputOTPSlot index={3} className="h-6 w-6 capitalize" />
         </InputOTPGroup>
         <InputOTPSeparator />
         <InputOTPGroup>

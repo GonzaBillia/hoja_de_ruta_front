@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import useCreateRouteSheet from "@/api/route-sheets/hooks/useCreateRouteSheet";
 import { useToast } from "@/hooks/use-toast";
 import { RemitoQuantio } from "@/api/remito/types/remito.types";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/routes/routeConfig";
 
 const NuevaRuta = () => {
   const [routeData, setRouteData] = useState<RouteSheet | null>(null);
@@ -27,7 +29,7 @@ const NuevaRuta = () => {
 
   // Hook para crear la hoja de ruta
   const { mutate: createRouteSheet, status } = useCreateRouteSheet();
-
+  const navigate = useNavigate()
   const handleClear = () => {
     setRouteData(null)
     setSelectedRepartidor(null)
@@ -55,7 +57,13 @@ const NuevaRuta = () => {
     createRouteSheet(payload, {
       onSuccess: (data) => {
         setRouteData(data);
+        toast({
+          title: "Operación Exitosa",
+          description: `Se ha creado la hoja de ruta ${routeData?.codigo}`,
+          variant: "success",
+        });
         handleClear()
+        navigate(ROUTES.MAIN)
       },
       onError: (error) => {
         console.error("Error al crear la hoja de ruta:", error);

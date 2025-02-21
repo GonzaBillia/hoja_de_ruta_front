@@ -12,7 +12,7 @@ export interface User {
   username: string;
   email: string;
   role: {
-    name: string;
+    name?: string;
   };
   role_id: number;
   deposito_id: number;
@@ -25,6 +25,23 @@ export interface UpdateUserPayload {
   username?: string;
   email?: string;
   role_id?: number;
+  deposito_id?: number | null;
+  sucursal_id?: number | null;
+}
+
+export interface RegisterUserResponse {
+  success: boolean;
+  message: string;
+  data: User;
+}
+
+// Payload para registrar un usuario. 
+// Para roles "deposito" y "sucursal" se requieren los respectivos IDs.
+export interface RegisterUserPayload {
+  username: string;
+  email: string;
+  password: string;
+  role: string; // "superadmin", "deposito", "sucursal" o "repartidor"
   deposito_id?: number | null;
   sucursal_id?: number | null;
 }

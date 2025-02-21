@@ -1,6 +1,13 @@
 // src/api/auth.js
 import apiClient from '../apiClient.ts';
-import { LoginCredentials, LoginResponse, UpdateUserPayload, User } from './types/auth.types.ts';
+import { LoginCredentials, LoginResponse, RegisterUserPayload, RegisterUserResponse, UpdateUserPayload, User } from './types/auth.types.ts';
+
+export const registerUser = async (
+    payload: RegisterUserPayload
+  ): Promise<User> => {
+    const response = await apiClient.post<RegisterUserResponse>("/api/auth/register", payload);
+    return response.data.data as User;
+  };
 
 export const getAllUsers = async (): Promise<User[]> => {
     const response = await apiClient.get<{ data: User[] }>("/api/auth");
