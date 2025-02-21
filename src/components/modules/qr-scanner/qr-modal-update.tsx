@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import QrScanner from "@/components/common/qr-scanner/QRScanner";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { QrCode } from "lucide-react";
+import QrManualInput from "./qr-manual-input";
 
 const QrModalUpdate: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -23,7 +24,7 @@ const QrModalUpdate: React.FC = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
       <Button
-          variant="ghost"
+          variant="outline"
           className="rounded-xl w-full mx-auto px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
           aria-label="Escanear"
         >
@@ -40,6 +41,7 @@ const QrModalUpdate: React.FC = () => {
         <div className="py-4 flex justify-center">
           {/* Solo renderiza el QrScanner cuando el modal está abierto */}
           {open && (
+            <div className="flex flex-col justify-center">
             <QrScanner
               onScanSuccess={(data: QrData) => {
                 setOpen(false); // Cierra el modal si ya se escaneó algo
@@ -47,6 +49,10 @@ const QrModalUpdate: React.FC = () => {
               width={300}
               height={300}
             />
+            <QrManualInput onSuccess={(data: QrData) => {
+                setOpen(false); // Cierra el modal si ya se escaneó algo
+              }} />
+            </div>
           )}
         </div>
         <DialogFooter>

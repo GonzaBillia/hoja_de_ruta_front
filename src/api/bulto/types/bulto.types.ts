@@ -8,6 +8,7 @@ export interface Bulto {
   id: number;
   codigo: string;
   route_sheet_id: number;
+  recibido?: boolean;
   historyRouteSheets?: BultoRouteSheet[];
 }
 
@@ -27,5 +28,10 @@ export interface Bulto {
     tipo?: string;
     codigo?: string;
     route_sheet_id?: number;
+  }
+  
+  export interface UpdateBatchBultoPayload {
+    codigo: string;
+    recibido: boolean;
   }
   

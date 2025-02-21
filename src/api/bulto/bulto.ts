@@ -3,7 +3,8 @@ import {
   CreateBultoPayload, 
   Bulto, 
   BultoResponse, 
-  UpdateBultoPayload 
+  UpdateBultoPayload, 
+  UpdateBatchBultoPayload
 } from './types/bulto.types';
 
 // Obtener todos los bultos
@@ -39,6 +40,13 @@ export const updateBulto = async (
 ): Promise<Bulto> => {
   const response = await apiClient.put<BultoResponse>(`/api/bulto/${id}`, payload);
   return response.data.data as Bulto;
+};
+
+export const updateBatchBultoRecibido = async (
+  payload: UpdateBatchBultoPayload[]
+): Promise<Bulto[]> => {
+  const response = await apiClient.put<BultoResponse>(`/api/bulto/recibido`, payload);
+  return response.data.data as Bulto[];
 };
 
 // Eliminar un bulto

@@ -70,6 +70,7 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
       setSelectedRemitos(initialRemitos);
       setInitialQRCodes(initialQR);
       (transformedRouteSheet)
+      setEstadoId(transformedRouteSheet.estado_id)
     }
   }, [transformedRouteSheet]);
 

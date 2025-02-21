@@ -124,9 +124,9 @@ export default function TablaGenerica<T>({
   onPageChange,
 }: TablaGenericaProps<T>) {
   const navigate = useNavigate()
-  const [sorting] = React.useState<SortingState>([])
-  const [columnFilters] = React.useState<ColumnFiltersState>([])
-  const [rowSelection] = React.useState({})
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility] = React.useState<VisibilityState>(
     Object.fromEntries(columnNames.map((col) => [col.key, true]))
   )
@@ -219,6 +219,9 @@ export default function TablaGenerica<T>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
