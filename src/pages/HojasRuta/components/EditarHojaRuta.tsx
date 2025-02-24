@@ -57,22 +57,31 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
 
   // Pre-poblar remitos si la hoja de ruta ya los tiene.
   useEffect(() => {
-    if (transformedRouteSheet && transformedRouteSheet.remitos) {
-      // Transformamos cada remito (que se asume tiene la propiedad external_id) a QrData.
-      // Se asignan los campos obligatorios según el interface QrData.
-      const initialRemitos: RemitoQuantio[] = transformedRouteSheet.remitos.map((r) => ({
-        Numero: r.external_id, // Usamos el external_id para identificar el QR.
-        CliApeNom: transformedRouteSheet.sucursal, // Para filtrar por sucursal.
+    if (transformedRouteSheet) {
+      // Calcular los valores a establecer
+      const newRemitos = transformedRouteSheet.remitos.map((r) => ({
+        Numero: r.external_id, // o el campo que corresponda
+        CliApeNom: transformedRouteSheet.sucursal,
       }));
-      const initialQR: QrData[] = transformedRouteSheet.bultos.map((b: any) => ({
-        codigo: b.codigo
+  
+      const newInitialQR = transformedRouteSheet.bultos.map((b: any) => ({
+        codigo: b.codigo,
       }));
-      setSelectedRemitos(initialRemitos);
-      setInitialQRCodes(initialQR);
-      (transformedRouteSheet)
-      setEstadoId(transformedRouteSheet.estado_id)
+  
+      // Actualizamos solo si los valores han cambiado
+      // Puedes usar JSON.stringify para una comparación simple (si los datos no son muy grandes)
+      if (JSON.stringify(newRemitos) !== JSON.stringify(selectedRemitos)) {
+        setSelectedRemitos(newRemitos);
+      }
+      if (JSON.stringify(newInitialQR) !== JSON.stringify(initialQRCodes)) {
+        setInitialQRCodes(newInitialQR);
+      }
+      if (transformedRouteSheet.estado_id !== estadoId) {
+        setEstadoId(transformedRouteSheet.estado_id);
+      }
     }
-  }, [transformedRouteSheet]);
+  }, [transformedRouteSheet, selectedRemitos, initialQRCodes, estadoId]);
+  
 
   // Hooks para actualizar la hoja de ruta.
   const stateMutation = useUpdateRouteSheetState(codigo);

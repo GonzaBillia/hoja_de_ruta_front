@@ -1,5 +1,5 @@
 import { ROUTES } from "@/routes/routeConfig";
-import { Building2, Eye, FlagTriangleRight, Frame, QrCode, UserRoundCog, Vault } from "lucide-react";
+import { Building2, Eye, Frame, QrCode, UserRoundCog, Vault } from "lucide-react";
 
 export const data = {
     projects: [
@@ -33,12 +33,6 @@ export const data = {
             name: "Usuarios", 
             url: ROUTES.USERS, 
             icon: UserRoundCog,
-            allowedRoles: ["superadmin"] // solo administradores pueden ver este módulo
-          },
-          { 
-            name: "Estados", 
-            url: ROUTES.ESTADOS, 
-            icon: FlagTriangleRight,
             allowedRoles: ["superadmin"] // solo administradores pueden ver este módulo
           },
     ],

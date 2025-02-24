@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { Command } from "lucide-react"
 import { NavProjects } from "@/components/modules/nav/nav-projects"
@@ -20,10 +18,9 @@ import { AppSidebarSkeleton } from "./components/sidebar-skeleton"
 import { data } from "./components/modules"
 import { useAuth } from "@/components/context/auth-context"
 
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: userData, isLoading } = useCurrentUser()
-  const {isAuthorized} = useAuth()
+  const { isAuthorized } = useAuth()
 
   if (isLoading) {
     return <AppSidebarSkeleton />
@@ -34,23 +31,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return <div>No se pudo cargar el usuario.</div>
   }
 
+  // Usamos un valor por defecto en caso de que role?.name sea undefined.
+  const roleName = userData.role?.name ?? ""
+
   // Filtramos los proyectos según el rol del usuario.
   const allowedProjects = data.projects.filter((project) => {
-    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
     if (!project.allowedRoles) return true;
-    return project.allowedRoles.includes(userData.role?.name);
+    return project.allowedRoles.includes(roleName);
   });
 
   const allowedGestiones = data.gestiones.filter((gestion) => {
-    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
     if (!gestion.allowedRoles) return true;
-    return gestion.allowedRoles.includes(userData.role?.name);
+    return gestion.allowedRoles.includes(roleName);
   });
 
   const allowedTools = data.tools.filter((tool) => {
-    // Si no se especifican roles, se asume que el proyecto es accesible para todos.
     if (!tool.allowedRoles) return true;
-    return tool.allowedRoles.includes(userData.role?.name);
+    return tool.allowedRoles.includes(roleName);
   });
 
   return (
@@ -71,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     Sanchez Antoniolli
                   </span>
                   <span className="truncate text-xs">
-                    {userData.role?.name || ""}
+                    {roleName}
                   </span>
                 </div>
               </Link>
@@ -83,8 +80,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={allowedProjects} title="Menu" />
         {isAuthorized(["superadmin"]) && (
           <>
-          <NavProjects projects={allowedGestiones} title="Gestión" />
-          <NavProjects projects={allowedTools} title="Utilidades" />
+            <NavProjects projects={allowedGestiones} title="Gestión" />
+            <NavProjects projects={allowedTools} title="Utilidades" />
           </>
         )}
       </SidebarContent>

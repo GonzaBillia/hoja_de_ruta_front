@@ -1,125 +1,141 @@
+// ControlarHojaRuta.tsx
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogClose,
-  } from "@/components/ui/dialog";
-  import { Button } from "@/components/ui/button";
-  import Tabladatas from "./ControlTable";
-  import { useState, useEffect } from "react";
-  import { Bulto } from "@/api/bulto/types/bulto.types";
-  import QrModalUpdate from "@/components/modules/qr-scanner/qr-modal-update";
-  import { useToast } from "@/hooks/use-toast";
-  import useUpdateBatchBulto from "@/api/bulto/hooks/useUpdateBatchBulto";
-  import useUpdateRouteSheetState from "@/api/route-sheets/hooks/useUpdateRouteSheetState";
-  import { useQrContext } from "@/components/context/qr-context";
-  
-  interface ControlarHojaRutaProps {
-    isOpen: boolean;
-    onClose: () => void;
-    data: any; // Puedes tipar este objeto según tus modelos
-  }
-  
-  const ControlarHojaRuta = ({ isOpen, onClose, data }: ControlarHojaRutaProps) => {
-    const { toast } = useToast();
-    // Estado local: lista de bultos inicializada desde data
-    const [bultos, setBultos] = useState<Bulto[]>(data.bultos);
-    // Hook para actualizar el estado de la hoja de ruta
-    const updateRouteSheetMutation = useUpdateRouteSheetState(data.codigo);
-    // Hook para actualizar en lote los bultos
-    const updateBatchBultoMutation = useUpdateBatchBulto();
-  
-    // Accedemos al contexto QR
-    const { qrCodes, clearQrCodes } = useQrContext();
-  
-    // Efecto para procesar cada nuevo código escaneado
-    useEffect(() => {
-      if (qrCodes.length === 0) return;
-      
-      const scannedCode = qrCodes[0]?.codigo;
-      if (!scannedCode) {
-        clearQrCodes();
-        return;
-      }
-      
-      const index = bultos.findIndex((b) => b.codigo === scannedCode);
-      if (index === -1) {
-        toast({
-          title: "Código no corresponde a ningún bulto de esta hoja de ruta",
-          variant: "destructive",
-        });
-        clearQrCodes();
-        return;
-      }
-      
-      const bultoFound = bultos[index];
-      if (bultoFound.recibido) {
-        toast({
-          title: "Este bulto ya ha sido escaneado",
-          variant: "destructive",
-        });
-        clearQrCodes();
-        return;
-      }
-      
-      const updatedBultos = [...bultos];
-      updatedBultos[index] = { ...bultoFound, recibido: true };
-      setBultos(updatedBultos);
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import Tabladatas from "./ControlTable";
+import { useState, useEffect } from "react";
+import { Bulto } from "@/api/bulto/types/bulto.types";
+import QrModalUpdate from "@/components/modules/qr-scanner/qr-modal-update";
+import { useToast } from "@/hooks/use-toast";
+import useUpdateBatchBulto from "@/api/bulto/hooks/useUpdateBatchBulto";
+import useUpdateRouteSheetState from "@/api/route-sheets/hooks/useUpdateRouteSheetState";
+import { useQrContext } from "@/components/context/qr-context";
+import PDFDownloadModal from "./DownloadPDFModal";
+import GeneratePDFRouteSheet from "./generateRouteSheetPDF";
+
+interface ControlarHojaRutaProps {
+  isOpen: boolean;
+  onClose: () => void;
+  data: any; // Puedes tipar este objeto según tus modelos
+}
+
+const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, data }) => {
+  const { toast } = useToast();
+  // Estado local: lista de bultos inicializada desde data
+  const [bultos, setBultos] = useState<Bulto[]>(data.bultos);
+  // Hook para actualizar el estado de la hoja de ruta
+  const updateRouteSheetMutation = useUpdateRouteSheetState(data.codigo);
+  // Hook para actualizar en lote los bultos
+  const updateBatchBultoMutation = useUpdateBatchBulto();
+  const { qrCodes, clearQrCodes } = useQrContext();
+
+  // Estado para mostrar el modal de descarga PDF
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  // Estado para controlar la generación del PDF mediante el componente GeneratePDFRouteSheet
+  const [triggerPDFDownload, setTriggerPDFDownload] = useState(false);
+
+  // Efecto para procesar cada nuevo código escaneado
+  useEffect(() => {
+    if (qrCodes.length === 0) return;
+    
+    const scannedCode = qrCodes[0]?.codigo;
+    if (!scannedCode) {
       clearQrCodes();
-    }, [qrCodes, bultos, clearQrCodes, toast]);
-  
-    // Handler del botón Confirmar
-    const handleConfirm = () => {
-      const allScanned = bultos.every((b) => b.recibido);
-      let newEstadoId = 4; // Por defecto, "recibido"
-      
-      if (!allScanned) {
-        if (
-          !window.confirm(
-            "No todos los bultos han sido escaneados. ¿Desea proceder de todas formas?"
-          )
-        ) {
-          return;
-        }
-        // Si el usuario decide proceder a pesar de no haber escaneado todos, se asigna "recibido incompleto"
-        newEstadoId = 5;
-      }
-      
-      // Arma el payload para actualizar los bultos escaneados
-      const payload = bultos
-        .filter((b) => b.recibido)
-        .map((b) => ({ codigo: b.codigo, recibido: true }));
-      
-      // Actualiza en lote los bultos usando el hook useUpdateBatchBulto
-      updateBatchBultoMutation.mutate(payload, {
-        onSuccess: () => {
-          toast({ title: "Bultos actualizados correctamente", variant: "success" });
-          // Actualiza el estado de la hoja de ruta según la condición
-          updateRouteSheetMutation.mutate(
-            { estado_id: newEstadoId },
-            {
-              onSuccess: () => {
-                toast({ title: "Hoja de ruta actualizada correctamente", variant: "success" });
-                onClose();
-              },
-              onError: () => {
-                toast({ title: "Error al actualizar la hoja de ruta", variant: "destructive" });
-              },
-            }
-          );
-        },
-        onError: () => {
-          toast({ title: "Error al actualizar los bultos", variant: "destructive" });
-        },
+      return;
+    }
+    
+    const index = bultos.findIndex((b) => b.codigo === scannedCode);
+    if (index === -1) {
+      toast({
+        title: "Código no corresponde a ningún bulto de esta hoja de ruta",
+        variant: "destructive",
       });
-    };
-  
-    // Deshabilitamos el botón confirmar mientras se procesa alguna de las mutaciones
-    const isProcessing = updateBatchBultoMutation.isPending || updateRouteSheetMutation.isPending;
-  
-    return (
+      clearQrCodes();
+      return;
+    }
+    
+    const bultoFound = bultos[index];
+    if (bultoFound.recibido) {
+      toast({
+        title: "Este bulto ya ha sido escaneado",
+        variant: "destructive",
+      });
+      clearQrCodes();
+      return;
+    }
+    
+    const updatedBultos = [...bultos];
+    updatedBultos[index] = { ...bultoFound, recibido: true };
+    setBultos(updatedBultos);
+    clearQrCodes();
+  }, [qrCodes, bultos, clearQrCodes, toast]);
+
+  // Handler del botón Confirmar
+  const handleConfirm = () => {
+    const allScanned = bultos.every((b) => b.recibido);
+    let newEstadoId = 4; // Por defecto, "recibido"
+    
+    if (!allScanned) {
+      if (
+        !window.confirm(
+          "No todos los bultos han sido escaneados. ¿Desea proceder de todas formas?"
+        )
+      ) {
+        return;
+      }
+      newEstadoId = 5; // "recibido incompleto"
+    }
+    
+    // Arma el payload para actualizar los bultos escaneados
+    const payload = bultos
+      .filter((b) => b.recibido)
+      .map((b) => ({ codigo: b.codigo, recibido: true }));
+    
+    // Actualiza en lote los bultos
+    updateBatchBultoMutation.mutate(payload, {
+      onSuccess: () => {
+        toast({ title: "Bultos actualizados correctamente", variant: "success" });
+        // Actualiza el estado de la hoja de ruta
+        updateRouteSheetMutation.mutate(
+          { estado_id: newEstadoId },
+          {
+            onSuccess: () => {
+              toast({ title: "Hoja de ruta actualizada correctamente", variant: "success" });
+              // Muestra el modal para descargar el PDF
+              setShowPDFModal(true);
+            },
+            onError: () => {
+              toast({ title: "Error al actualizar la hoja de ruta", variant: "destructive" });
+            },
+          }
+        );
+      },
+      onError: () => {
+        toast({ title: "Error al actualizar los bultos", variant: "destructive" });
+      },
+    });
+  };
+
+  // Deshabilitamos el botón confirmar mientras se procesa alguna mutación
+  const isProcessing = updateBatchBultoMutation.isPending || updateRouteSheetMutation.isPending;
+
+  // Cuando se pulse "Descargar" en el modal, activamos la generación del PDF usando el componente GeneratePDFRouteSheet
+  const handleDownloadComplete = () => {
+    // Esta función se ejecuta una vez que GeneratePDFRouteSheet finaliza la descarga
+    // Se cierra el modal y se finaliza el proceso de control
+    setTriggerPDFDownload(false);
+    setShowPDFModal(false);
+    onClose();
+  };
+
+  return (
+    <>
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
         <DialogContent>
           <DialogHeader>
@@ -176,9 +192,7 @@ import {
             </div>
           </div>
           <div className="space-y-1 mt-4">
-            {/* Componente que activa el escáner QR y actualiza el contexto */}
             <QrModalUpdate />
-            {/* Tabla que muestra los bultos con sus códigos y estado (escaneado o no) */}
             <Tabladatas data={bultos} />
           </div>
           <DialogFooter>
@@ -193,8 +207,21 @@ import {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    );
-  };
-  
-  export default ControlarHojaRuta;
-  
+
+      {/* Modal de descarga PDF */}
+      <PDFDownloadModal
+        isOpen={showPDFModal}
+        onClose={() => setShowPDFModal(false)}
+        // Al pulsar "Descargar" en el modal, activamos la generación del PDF
+        onDownload={() => setTriggerPDFDownload(true)}
+      />
+
+      {/* Componente que genera el PDF. Se renderiza solo cuando se activa triggerPDFDownload */}
+      {triggerPDFDownload && (
+        <GeneratePDFRouteSheet codigo={data.codigo} onComplete={handleDownloadComplete} />
+      )}
+    </>
+  );
+};
+
+export default ControlarHojaRuta;
