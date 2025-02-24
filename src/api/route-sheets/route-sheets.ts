@@ -7,26 +7,7 @@ export const getRouteSheets = async (page: number, limit: number): Promise<Pagin
     params: { page, limit },
   });
   
-  // Si la respuesta tiene la forma { data: [...], meta: {...} }
-  const responseData = response.data.data;
-  const routeSheetsArray = Array.isArray(responseData) ? responseData : responseData.data;
-  
-  // Si ya viene paginada por el backend, podrías simplemente retornar esa paginación.
-  // Pero si necesitas calcularla localmente, puedes hacerlo:
-  const total = routeSheetsArray.length;
-  const last_page = Math.ceil(total / limit);
-  const start = (page - 1) * limit;
-  const paginatedData = routeSheetsArray.slice(start, start + limit);
-  
-  
-  return {
-    data: paginatedData,
-    meta: {
-      page,
-      last_page,
-      total,
-    },
-  };
+  return response.data.data
 };
 
 // Función para obtener una hoja de ruta por ID.
