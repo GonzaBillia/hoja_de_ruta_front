@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   InputOTP,
   InputOTPGroup,
@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { getQRCodeById } from "@/api/qr-code/qrcode"; // asegúrate de la ruta correcta
+import { getQRCodeById } from "@/api/qr-code/qrcode";
 import { QRCode } from "@/api/qr-code/types/qrcode.types";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useToast } from "@/hooks/use-toast";
@@ -18,28 +18,24 @@ interface QrManualInputProps {
   onError?: (error: string) => void;
 }
 
-// Se asume que el usuario ingresa 10 dígitos sin separadores.
-// El código final tendrá el formato: XX-XX-XXXXXX (12 caracteres) y todas las letras en mayúsculas.
 const MANUAL_CODE_LENGTH = 10;
 
 const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => {
-  // Estado para el valor que escribe el usuario (sin separadores)
   const [inputCode, setInputCode] = useState("");
-  // Estado para el código final que se usará en la consulta.
   const [codeToFetch, setCodeToFetch] = useState("");
 
   const { toast } = useToast();
+  const { qrCodes, addQrCode } = useQrContext();
 
-  const {qrCodes, addQrCode} = useQrContext()
+  // Crear una referencia para el botón
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Usamos useQuery con enabled: !!codeToFetch para que no haga fetch hasta que codeToFetch sea no vacío.
-  const {  isLoading,  refetch } = useQuery<QRCode>({
+  const { isLoading, refetch } = useQuery<QRCode>({
     queryKey: ["qrcode", codeToFetch],
     queryFn: () => getQRCodeById(codeToFetch),
     enabled: !!codeToFetch,
   });
 
-  // Cuando el usuario presiona el botón, se valida el código y se arma el código final.
   const handleValidate = async () => {
     if (inputCode.trim().length !== MANUAL_CODE_LENGTH) {
       toast({
@@ -55,8 +51,14 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
     try {
       const result = await refetch();
       if (result.data) {
-        const qrData: QrData = { codigo: result.data.codigo, tipoBultoId: result.data.tipo_bulto_id, tipoBultoCode: upperCode.slice(2, 4), depositId: result.data.deposito_id, depositCode:upperCode.slice(0,2), serial: result.data.serial };
-        // Verificar duplicados (si el contexto ya tiene ese código)
+        const qrData: QrData = {
+          codigo: result.data.codigo,
+          tipoBultoId: result.data.tipo_bulto_id,
+          tipoBultoCode: upperCode.slice(2, 4),
+          depositId: result.data.deposito_id,
+          depositCode: upperCode.slice(0, 2),
+          serial: result.data.serial,
+        };
         const duplicate = qrCodes.some((qr) => qr.codigo === qrData.codigo);
         if (duplicate) {
           toast({
@@ -85,8 +87,16 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
       if (onError) onError(err.message);
     }
   };
-  
-  
+
+  // Manejador de cambio para el input
+  const handleChange = (value: string) => {
+    const upperValue = value.toUpperCase();
+    setInputCode(upperValue);
+    if (upperValue.length === MANUAL_CODE_LENGTH) {
+      // Mover el foco al botón
+      buttonRef.current?.focus();
+    }
+  };
 
   return (
     <div className="mt-4 w-full flex flex-col items-center">
@@ -95,7 +105,7 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
       </p>
       <InputOTP
         maxLength={MANUAL_CODE_LENGTH}
-        onChange={(value: string) => setInputCode(value.toUpperCase())}
+        onChange={handleChange}
         className="max-w-24"
       >
         <InputOTPGroup>
@@ -117,7 +127,12 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
           <InputOTPSlot index={9} className="h-6 w-6" />
         </InputOTPGroup>
       </InputOTP>
-      <Button className="mt-4" onClick={handleValidate} disabled={isLoading}>
+      <Button
+        ref={buttonRef} // Asignamos la referencia al botón
+        className="mt-4"
+        onClick={handleValidate}
+        disabled={isLoading}
+      >
         {isLoading ? "Validando..." : "Validar Código"}
       </Button>
     </div>

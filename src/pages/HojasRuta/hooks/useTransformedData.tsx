@@ -6,6 +6,9 @@ import useDepositos from "@/api/deposito/hooks/useDepositos";
 import useBultos from "@/api/bulto/hooks/useBultos";
 import useRepartidores from "@/api/repartidor/hooks/useRepartidores";
 import { formatDate } from "@/utils/formatDate";
+import { useQueries } from "@tanstack/react-query";
+import { getEstado } from "@/api/estado/estado";
+
 
 export const useTransformedRouteSheets = (page: number, limit: number) => {
   // Se asume que useRouteSheets acepta page y limit como parámetros
@@ -19,6 +22,33 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
   const routeSheets = useMemo(() => {
     return routeSheetsResponse?.data || [];
   }, [routeSheetsResponse]);
+
+  // Extraemos los estado_id únicos de las hojas de ruta
+  const uniqueEstadoIds = useMemo(() => {
+    return Array.from(new Set(routeSheets.map(rs => rs.estado_id)));
+  }, [routeSheets]);
+
+  // Ejecutamos una query por cada estado_id único para traer el objeto Estado
+  const estadoQueries = useQueries({
+    queries: uniqueEstadoIds.map(id => ({
+      queryKey: ['estado', id],
+      queryFn: () => getEstado(id),
+      enabled: !!id,
+    }))
+  });
+
+  // Creamos un mapa para obtener rápidamente el nombre del estado a partir de su id
+  const estadoMap = useMemo(() => {
+    const map = new Map<number, string>();
+    estadoQueries.forEach(query => {
+      if (query.data) {
+        map.set(query.data.id, query.data.nombre);
+      }
+    });
+    return map;
+  }, [estadoQueries]);
+
+  // Transformamos la data de routeSheets
   const transformedData = useMemo(() => {
     if (!routeSheets || !sucursales || !depositos || !bultos || !repartidores) return [];
 
@@ -38,11 +68,10 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
       const repartidorName = rs.repartidor_id !== undefined && rs.repartidor_id !== null
         ? (repartidorMap.get(rs.repartidor_id) || "Desconocido")
         : "Desconocido";
-    
+
       // Filtrar todos los bultos que estén asignados actualmente o tengan en su historial este route sheet
       const bultosForRS = bultos.filter(b => {
         const isCurrent = b.route_sheet_id === rs.id;
-        // Se asume que los atributos del join se encuentran en b.historyRouteSheets[i].BultoRouteSheet
         const isInHistory = b.historyRouteSheets &&
           Array.isArray(b.historyRouteSheets) &&
           b.historyRouteSheets.some((hist: any) => 
@@ -51,10 +80,9 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
         return isCurrent || isInHistory;
       });
       const bultosCount = bultosForRS.length;
-    
-      // Mapear la información del historial para cada bulto que se asocie a este route sheet
+
+      // Mapear la información del historial para cada bulto
       const bultosHistorial = bultosForRS.map(b => {
-        // Extraer solo las asignaciones (del join) que correspondan a este route sheet
         const historyRecords = (b.historyRouteSheets || []).filter((hist: any) =>
           hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === rs.id
         );
@@ -68,8 +96,8 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
           }))
         };
       });
-    
-      // Prioridad de fecha: Recepción > Envío > Creación.
+
+      // Lógica de fecha de despliegue
       let dateValue = null;
       let dateType = "";
       if (rs.received_at) {
@@ -85,21 +113,16 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
         dateType = "N/A";
       }
       const displayDate = dateValue ? formatDate(dateValue) : "N/A";
-    
-      // Estado basado en la fecha, siguiendo la misma prioridad.
-      const estadoDisplay = rs.received_at
-        ? "Recibido"
-        : rs.sent_at
-        ? "Enviado"
-        : "Creado";
-    
+
+      // Usamos el estado obtenido a partir del estado_id mediante el mapa
+      const estadoDisplay = estadoMap.get(rs.estado_id) || "Desconocido";
+
       return {
         ...rs,
         deposito: depositoName,
         sucursal: sucursalName,
         repartidor: repartidorName,
         bultosCount,
-        // Puedes mantener ambos si necesitas mostrar los bultos actuales (p.ej. con asignación directa)
         currentBultos: bultos.filter(b => b.route_sheet_id === rs.id),
         bultosHistorial,
         displayDate,
@@ -107,9 +130,7 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
         estadoDisplay,
       };
     });
-    
-
-  }, [routeSheets, sucursales, depositos, bultos, repartidores]);
+  }, [routeSheets, sucursales, depositos, bultos, repartidores, estadoMap]);
 
   return {
     transformedData,

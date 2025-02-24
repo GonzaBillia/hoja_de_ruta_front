@@ -275,7 +275,7 @@ export default function TablaGenerica<T>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="text-center">
+                      <TableCell key={cell.id} className="text-center capitalize">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

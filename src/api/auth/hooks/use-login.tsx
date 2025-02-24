@@ -9,7 +9,7 @@ export const useLogin = (): UseMutationResult<LoginResponse, unknown, LoginCrede
     mutationFn: login,
     retry: (failureCount, error: any) => {
       // Aquí podemos detectar el error de conexión y reintentar hasta 2 veces
-      if (error?.code === 'ERR_CONNECTION_RESET' && failureCount < 2) {
+      if (error?.code === 'ERR_NETWORK' && failureCount < 2) {
         return true;
       }
       return false;

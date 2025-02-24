@@ -212,29 +212,29 @@ const RouteSheetDetail: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p>
+              <p className="capitalize">
                 <strong>Estado Actual:</strong>{" "}
                 {routeSheet.estado || routeSheet.estado_id}
               </p>
-              <p>
+              <p className="capitalize">
                 <strong>Depósito:</strong>{" "}
                 {routeSheet.deposito || routeSheet.deposito_id}
               </p>
-              <p>
+              <p className="capitalize">
                 <strong>Fecha de Creación:</strong>{" "}
                 {routeSheet.createdAtFormatted || "-"}
               </p>
             </div>
             <div>
-              <p>
+              <p className="capitalize">
                 <strong>Repartidor a Cargo:</strong>{" "}
                 {routeSheet.repartidor || routeSheet.repartidor_id}
               </p>
-              <p>
+              <p className="capitalize">
                 <strong>Sucursal de Destino:</strong>{" "}
                 {routeSheet.sucursal || routeSheet.sucursal_id}
               </p>
-              <p>
+              <p className="capitalize">
                 <strong>Total de Bultos:</strong>{" "}
                 {routeSheet.bultosCount ?? 0}
               </p>
@@ -242,11 +242,11 @@ const RouteSheetDetail: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="mt-4 space-y-2">
-              <p>
+              <p className="capitalize">
                 <strong>Fecha de Envío:</strong>{" "}
                 {routeSheet.sentAtFormatted || "Pendiente"}
               </p>
-              <p>
+              <p className="capitalize">
                 <strong>Fecha de Recepción:</strong>{" "}
                 {routeSheet.receivedAtFormatted || "Pendiente"}
               </p>

@@ -59,7 +59,7 @@ const NuevaRuta = () => {
         setRouteData(data);
         toast({
           title: "Operación Exitosa",
-          description: `Se ha creado la hoja de ruta ${routeData?.codigo}`,
+          description: `Se ha creado la hoja de ruta ${data.codigo}`,
           variant: "success",
         });
         handleClear()

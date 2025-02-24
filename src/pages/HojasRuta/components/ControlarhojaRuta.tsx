@@ -67,10 +67,6 @@ import {
       const updatedBultos = [...bultos];
       updatedBultos[index] = { ...bultoFound, recibido: true };
       setBultos(updatedBultos);
-      toast({
-        title: `Bulto ${scannedCode} escaneado correctamente`,
-        variant: "success",
-      });
       clearQrCodes();
     }, [qrCodes, bultos, clearQrCodes, toast]);
   
