@@ -3,6 +3,7 @@ export const ROUTES = {
     MAIN: "/",
     HOME: "/home",
     HOJA: "/detalle/:codigo",
+    DETALLE: "/detalle/",
     NUEVA: "/nueva-ruta",
     OBS: "/observaciones",
     DEPOS: "/depositos",

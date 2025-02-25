@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -7,92 +7,172 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import QrScanner from "@/components/common/qr-scanner/QRScanner";
 import { QrCode } from "lucide-react";
-import QrManualInput from "../../common/qr-scanner/qr-manual-input";
-import { isMobile } from "react-device-detect";
+import QrScanner from "@/components/common/qr-scanner/QRScanner";
 import QRReader from "@/components/common/qr-scanner/QRReader";
+import QrManualInput from "@/components/common/qr-scanner/qr-manual-input";
+import { isMobile } from "react-device-detect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import Tabladatas from "@/pages/HojasRuta/components/ControlTable";
+import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
+import { useLocation } from "react-router-dom";
+import { ROUTES } from "@/routes/routeConfig";
+import { useQrContext } from "@/components/context/qr-context";
+import { Bulto } from "@/api/bulto/types/bulto.types";
+import { useToast } from "@/hooks/use-toast";
 
-const QrModalUpdate: React.FC = () => {
+interface QrModalUpdateProps {
+  bultos: Bulto[];
+  setBultos: React.Dispatch<React.SetStateAction<Bulto[]>>;
+}
+
+const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
   const [open, setOpen] = useState(false);
   const [scannerReady, setScannerReady] = useState(false);
   const [manualInputEnabled, setManualInputEnabled] = useState(false);
+  const location = useLocation();
+  const { clearQrCodes, addQrCode } = useQrContext();
+  const {toast} = useToast();
 
-  // Función para cerrar el modal manualmente.
-  // En modo actualización se mantiene abierto tras escanear, salvo que el usuario decida cerrarlo.
+  // Al abrir el modal, limpiamos el contexto para comenzar vacío.
+  useEffect(() => {
+    if (open) clearQrCodes();
+  }, [open, clearQrCodes]);
+
+  // Para procesar cada nuevo código escaneado
+  const [processing, setProcessing] = useState(false);
+  const prevQrCodesLength = useRef(0);
+  const { qrCodes } = useQrContext(); // Obtenemos el array de códigos del contexto
+
+  useEffect(() => {
+    // Si no han aumentado los códigos, no procesamos
+    if (qrCodes.length <= prevQrCodesLength.current) return;
+    prevQrCodesLength.current = qrCodes.length;
+    if (processing || qrCodes.length === 0) return;
+
+    setProcessing(true);
+    const scannedCode = qrCodes[0]?.codigo;
+    if (!scannedCode) {
+      clearQrCodes();
+      setProcessing(false);
+      return;
+    }
+
+    const index = bultos.findIndex((b) => b.codigo === scannedCode);
+    if (index === -1) {
+      toast({
+        title: "Código no corresponde a ningún bulto de esta hoja de ruta",
+        variant: "destructive",
+      });
+      clearQrCodes();
+      setProcessing(false);
+      return;
+    }
+
+    const bultoFound = bultos[index];
+    if (bultoFound.recibido) {
+      toast({
+        title: "Este bulto ya ha sido escaneado",
+        variant: "destructive",
+      });
+      clearQrCodes();
+      setProcessing(false);
+      return;
+    }
+
+    const updatedBultos = [...bultos];
+    updatedBultos[index] = { ...bultoFound, recibido: true };
+    setBultos(updatedBultos);
+    clearQrCodes();
+    setProcessing(false);
+  }, [qrCodes, bultos, clearQrCodes, toast, setBultos, processing]);
+
+  // Handler para escaneo exitoso (automático o manual)
+  const handleQrScanSuccess = (data: QrData) => {
+    if (location.pathname === ROUTES.NUEVA ||
+      location.pathname.startsWith(ROUTES.DETALLE)) {
+      // En modo "cola": actualizamos el estado directamente
+      addQrCode(data);
+    } else {
+      setOpen(false);
+      setScannerReady(false);
+    }
+  };
+
   const handleClose = () => {
+    if (isMobile && !scannerReady) return;
     setOpen(false);
     setScannerReady(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="rounded-xl w-full mx-auto px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
-          aria-label="Escanear"
-        >
-          <QrCode className="h-8 w-8" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] mx-auto">
-        <DialogHeader>
-          <DialogTitle>Escanear Código QR</DialogTitle>
-          <DialogDescription>
-            {isMobile
-              ? "Activa la cámara para leer el código QR."
-              : "Utiliza el lector para capturar el código QR."}
-          </DialogDescription>
-          <div className="flex items-center space-x-2 mt-2">
-            <Checkbox
-              id="manual-input-checkbox"
-              checked={manualInputEnabled}
-              onCheckedChange={(checked) =>
-                setManualInputEnabled(checked as boolean)
-              }
-            />
-            <Label htmlFor="manual-input-checkbox">
-              Habilitar ingreso manual
-            </Label>
-          </div>
-        </DialogHeader>
-        <div className="py-4 flex justify-center">
-          {open && (
-            <div className="flex flex-col justify-center space-y-4">
-              {isMobile ? (
-                manualInputEnabled ? (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="rounded-xl w-full mx-auto px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
+            aria-label="Escanear"
+          >
+            <QrCode className="h-8 w-8" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px] mx-auto">
+          <DialogHeader>
+            <DialogTitle>Escanear Código QR</DialogTitle>
+            <DialogDescription>
+              {isMobile
+                ? "Activa la cámara para leer el código QR."
+                : "Utiliza el lector para capturar el código QR."}
+            </DialogDescription>
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox
+                id="manual-input-checkbox"
+                checked={manualInputEnabled}
+                onCheckedChange={(checked) =>
+                  setManualInputEnabled(checked as boolean)
+                }
+              />
+              <Label htmlFor="manual-input-checkbox">
+                Habilitar ingreso manual
+              </Label>
+            </div>
+          </DialogHeader>
+          <div className="py-4 flex flex-col space-y-4">
+            {open && (
+              <>
+                {isMobile ? (
+                  manualInputEnabled ? (
+                    <QrManualInput
+                      onSuccess={(data) => {
+                        console.log("QR Escaneado (manual):", data);
+                        handleQrScanSuccess(data);
+                      }}
+                      onError={(error) =>
+                        console.error("Error en ingreso manual:", error)
+                      }
+                    />
+                  ) : (
+                    <QrScanner
+                      active={open}
+                      onScannerReady={() => setScannerReady(true)}
+                      onScanSuccess={(data) => {
+                        console.log("QR Escaneado (móvil):", data);
+                        handleQrScanSuccess(data);
+                      }}
+                      width={300}
+                      height={300}
+                    />
+                  )
+                ) : manualInputEnabled ? (
                   <QrManualInput
                     onSuccess={(data) => {
                       console.log("QR Escaneado (manual):", data);
-                      // En modo actualización no se cierra el modal
-                    }}
-                    onError={(error) =>
-                      console.error("Error en ingreso manual:", error)
-                    }
-                  />
-                ) : (
-                  <QrScanner
-                    active={open}
-                    onScannerReady={() => setScannerReady(true)}
-                    onScanSuccess={(data) => {
-                      console.log("QR Escaneado (móvil):", data);
-                      // En modo actualización, el modal permanece abierto
-                    }}
-                    width={300}
-                    height={300}
-                  />
-                )
-              ) : (
-                manualInputEnabled ? (
-                  <QrManualInput
-                    onSuccess={(data) => {
-                      console.log("QR Escaneado (manual):", data);
-                      // Procesa el escaneo manual sin cerrar el modal
+                      handleQrScanSuccess(data);
                     }}
                     onError={(error) =>
                       console.error("Error en ingreso manual:", error)
@@ -102,29 +182,30 @@ const QrModalUpdate: React.FC = () => {
                   <QRReader
                     onScanSuccess={(data) => {
                       console.log("QR Escaneado (escritorio):", data);
-                      // QRReader mantiene el modal abierto y re-enfoca el input
+                      handleQrScanSuccess(data);
                     }}
                     onScanError={(error) =>
                       console.error("Error al escanear:", error)
                     }
                   />
-                )
-              )}
-            </div>
-          )}
-          
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isMobile && !scannerReady}
-          >
-            Cerrar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+                )}
+                {/* Visualizamos la tabla de bultos */}
+                <Tabladatas data={bultos} />
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={handleClose}>
+                Cerrar
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      
+    </>
   );
 };
 
