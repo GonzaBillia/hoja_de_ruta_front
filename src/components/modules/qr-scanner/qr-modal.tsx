@@ -67,7 +67,7 @@ const QrModal: React.FC = () => {
         open={open}
         onOpenChange={(isOpen) => {
           // En modo individual se evita cerrar el modal si el scanner no está listo
-          if (!isOpen && !scannerReady) return;
+          if (!isOpen && isMobile && !scannerReady) return;
           setOpen(isOpen);
           if (!isOpen) {
             setScannerReady(false);

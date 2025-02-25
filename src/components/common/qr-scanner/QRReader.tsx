@@ -8,6 +8,7 @@ import { parseCustomFormat } from "@/utils/parseFormatQR";
 import { useQrContext } from "@/components/context/qr-context";
 import { useToast } from "@/hooks/use-toast";
 import { QRCode } from "@/api/qr-code/types/qrcode.types";
+import FullScreenLoader from "../loader/FSLoader";
 
 interface QRReaderProps {
   onScanSuccess: (data: QrData) => void;
@@ -17,16 +18,16 @@ interface QRReaderProps {
 const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { addQrCode, removeQrCode } = useQrContext();
+  const { addQrCode, removeQrCode, qrCodes } = useQrContext();
+  const location = useLocation();
+  const allowMultiple = location.pathname === ROUTES.NUEVA;
 
   // Estado para almacenar el valor que llega del lector
   const [rawInput, setRawInput] = useState("");
   // Estado para activar la consulta (código a validar)
   const [codeToFetch, setCodeToFetch] = useState("");
-  // Cola para acumular múltiples códigos (modo múltiple)
-  const [queue, setQueue] = useState<QrData[]>([]);
-  const location = useLocation();
-  const allowMultiple = location.pathname === ROUTES.NUEVA;
+  // Estado para mostrar el loader mientras se procesa
+  const [processing, setProcessing] = useState(false);
 
   // Usamos useQuery para validar el código
   const { refetch, isLoading } = useQuery<QRCode>({
@@ -40,6 +41,7 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
 
   const handleEnter = async () => {
     try {
+      setProcessing(true);
       // Parseamos la cadena recibida del lector
       const parsedResult = parseCustomFormat(rawInput);
       // Convertimos a unknown y luego a QrData para indicarle a TypeScript
@@ -56,12 +58,12 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
 
       // Validamos el código mediante refetch
       const result = await refetch();
-      console.log(result);
+
       if (result.data) {
         // Construimos el objeto validado; adapta según tu estructura
         const validatedQr: QrData = {
           codigo: result.data.codigo,
-          depositCode: scannedQr.depositCode, // o, si la respuesta trae este dato, result.data.depositCode
+          depositCode: scannedQr.depositCode,
           tipoBultoCode: scannedQr.tipoBultoCode,
           depositId: result.data.deposito_id,
           tipoBultoId: result.data.tipo_bulto_id,
@@ -70,7 +72,7 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
         console.log(validatedQr);
         if (allowMultiple) {
           // Verifica duplicados antes de agregar
-          const isDuplicate = queue.some((qr) => qr.codigo === validatedQr.codigo);
+          const isDuplicate = qrCodes.some((qr) => qr.codigo === validatedQr.codigo);
           if (isDuplicate) {
             const duplicateMsg = `Código duplicado: ${validatedQr.codigo}`;
             onScanError?.(duplicateMsg);
@@ -79,10 +81,9 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
               description: duplicateMsg,
               variant: "destructive",
             });
-            return; // No se continúa con el proceso
+            return;
           }
-          // Agregamos a la cola y al contexto
-          setQueue((prev) => [...prev, validatedQr]);
+          // Agregamos al contexto y notificamos
           addQrCode(validatedQr);
           toast({
             title: "Escaneo exitoso",
@@ -111,12 +112,11 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
         description: errMsg,
         variant: "destructive",
       });
-      // En caso de error, remueve del contexto (si existe) para evitar agregar un objeto vacío
       if (scannedQr && scannedQr.codigo) {
         removeQrCode(scannedQr);
       }
     } finally {
-      // Reiniciamos el input y el estado para la próxima lectura
+      setProcessing(false);
       setRawInput("");
       setCodeToFetch("");
       if (inputRef.current) {
@@ -132,7 +132,7 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
     }
   };
 
-  // Forzamos el re-enfoque del input si se pierde (cuando no se permite el ingreso manual)
+  // Forzamos el re-enfoque del input si se pierde el foco
   useEffect(() => {
     if (!inputRef.current) return;
     const handleDocumentClick = () => {
@@ -146,7 +146,7 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
     };
   }, []);
 
-  // Aseguramos que el input se enfoque al montar
+  // Enfocar el input al montar
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
@@ -154,9 +154,19 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
   }, []);
 
   return (
-    <div className="flex flex-col space-y-4">
-      <label className="text-sm font-medium">Escanea el Código QR con el Lector</label>
-      {/* Input oculto para estética, pero activo para capturar la entrada */}
+    <div className="relative flex flex-col space-y-4">
+      {processing && (
+        <>
+        <FullScreenLoader /> 
+        <label className="text-sm font-medium">Procesando Codigo QR</label>
+
+        </>
+        )}
+      {!processing && (
+        <>
+        <label className="text-sm font-medium">Escanea el Código QR con el Lector</label>
+        </>
+      )}
       <input
         ref={inputRef}
         type="text"
@@ -165,10 +175,8 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
         onChange={(e) => setRawInput(e.target.value)}
         onBlur={() => {
           setTimeout(() => {
-            if (inputRef.current && document.activeElement !== inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, 10);
+            inputRef.current?.focus();
+          }, 50);
         }}
         style={{
           opacity: 0,

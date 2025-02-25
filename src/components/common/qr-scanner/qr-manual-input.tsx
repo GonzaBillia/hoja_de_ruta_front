@@ -102,9 +102,6 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
 
   return (
     <div className="mt-4 w-full flex flex-col items-center">
-      <p className="text-center font-medium pb-2">
-        O ingresa manualmente el código:
-      </p>
       <InputOTP
         maxLength={MANUAL_CODE_LENGTH}
         onChange={handleChange}

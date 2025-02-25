@@ -48,7 +48,6 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const { isAuthorized } = useAuth()
-
   // Para la acción "modificar": usaremos QrData[] para manejar los remitos seleccionados.
   const [selectedRemitos, setSelectedRemitos] = useState<RemitoQuantio[]>([]);
   const [initialQRCodes, setInitialQRCodes] = useState<QrData[]>([])
@@ -76,7 +75,7 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
       if (JSON.stringify(newInitialQR) !== JSON.stringify(initialQRCodes)) {
         setInitialQRCodes(newInitialQR);
       }
-      if (transformedRouteSheet.estado_id !== estadoId) {
+      if (transformedRouteSheet && estadoId === undefined) {
         setEstadoId(transformedRouteSheet.estado_id);
       }
     }
