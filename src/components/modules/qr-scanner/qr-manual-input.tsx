@@ -12,6 +12,8 @@ import { QRCode } from "@/api/qr-code/types/qrcode.types";
 import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useToast } from "@/hooks/use-toast";
 import { useQrContext } from "@/components/context/qr-context";
+import { useLocation } from "react-router-dom";
+import { ROUTES } from "@/routes/routeConfig";
 
 interface QrManualInputProps {
   onSuccess: (data: QrData) => void;
@@ -29,7 +31,7 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
 
   // Crear una referencia para el botón
   const buttonRef = useRef<HTMLButtonElement>(null);
-
+  const location = useLocation()
   const { isLoading, refetch } = useQuery<QRCode>({
     queryKey: ["qrcode", codeToFetch],
     queryFn: () => getQRCodeById(codeToFetch),
@@ -60,7 +62,7 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
           serial: result.data.serial,
         };
         const duplicate = qrCodes.some((qr) => qr.codigo === qrData.codigo);
-        if (duplicate) {
+        if (duplicate && location.pathname === ROUTES.NUEVA) {
           toast({
             title: "Código duplicado",
             description: `El código QR ${qrData.codigo} ya fue escaneado.`,

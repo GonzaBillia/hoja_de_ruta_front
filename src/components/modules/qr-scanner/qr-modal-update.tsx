@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import QrScanner from "@/components/common/qr-scanner/QRScanner";
-import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { QrCode } from "lucide-react";
 import QrManualInput from "./qr-manual-input";
 
@@ -43,13 +42,14 @@ const QrModalUpdate: React.FC = () => {
           {open && (
             <div className="flex flex-col justify-center">
             <QrScanner
-              onScanSuccess={(data: QrData) => {
+              active={open}
+              onScanSuccess={() => {
                 setOpen(false); // Cierra el modal si ya se escaneó algo
               }}
               width={300}
               height={300}
             />
-            <QrManualInput onSuccess={(data: QrData) => {
+            <QrManualInput onSuccess={() => {
                 setOpen(false); // Cierra el modal si ya se escaneó algo
               }} />
             </div>

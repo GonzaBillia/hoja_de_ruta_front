@@ -8,6 +8,7 @@ import { useQrContext } from "@/components/context/qr-context";
 import { QrData, QrScannerProps } from "./types/qr-scanner";
 import { useToast } from "@/hooks/use-toast";
 import { ROUTES } from "@/routes/routeConfig";
+import { useLocation } from "react-router-dom";
 
 interface ExtendedQrScannerProps extends QrScannerProps {
   /** 
@@ -34,7 +35,7 @@ const QrScanner: React.FC<ExtendedQrScannerProps> = ({
   const errorShownRef = useRef(false);
   const { addQrCode, qrCodes } = useQrContext();
   const { toast } = useToast();
-
+  const location = useLocation()
   useEffect(() => {
     let cancelled = false;
 
