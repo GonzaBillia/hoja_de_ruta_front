@@ -15,32 +15,31 @@ import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { ROUTES } from "@/routes/routeConfig";
 import { useLocation } from "react-router-dom";
 import QrModalInfo from "./qr-modal-info";
-import QrManualInput from "./qr-manual-input";
+import QrManualInput from "../../common/qr-scanner/qr-manual-input";
+import { isMobile } from "react-device-detect";
+import QRReader from "@/components/common/qr-scanner/QRReader";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import QRCodeChips from "../new-route/components/qrcode-chips";
 
 const QrModal: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [scannerReady, setScannerReady] = useState(false);
   const [qrData, setQrData] = useState<QrData | null>(null);
+  const [manualInputEnabled, setManualInputEnabled] = useState(false);
   const location = useLocation();
 
   /**
-   * Evita que se cierre el modal si el scanner no está listo.
-   */
-  const handleClose = () => {
-    if (!scannerReady) return;
-    setOpen(false);
-    setScannerReady(false); // Reinicia el estado para la próxima apertura
-  };
-
-  /**
-   * Lógica al capturar un QR exitoso.
+   * handleQrScanSuccess:
+   * - En modo "cola" (ruta NUEVA) el modal se mantiene abierto para permitir múltiples escaneos.
+   * - En modo individual, se cierra el modal y se muestra la info en otro modal.
    */
   const handleQrScanSuccess = (data: QrData) => {
-    setOpen(false);
-    setScannerReady(false);
-
-    // Si no estamos en la ruta "NUEVA", abrimos otro modal de info
-    if (location.pathname !== ROUTES.NUEVA) {
+    if (location.pathname === ROUTES.NUEVA) {
+      // Modo cola: no se cierra el modal. Se asume que se notifica con toast y se acumula el código.
+    } else {
+      setOpen(false);
+      setScannerReady(false);
       setQrData(data);
     }
   };
@@ -52,16 +51,24 @@ const QrModal: React.FC = () => {
     setQrData(null);
   };
 
+  /**
+   * Función de cierre para el modal principal.
+   * En modo NUEVA, se permite cerrar el modal manualmente, pero no se cierra automáticamente luego de un escaneo.
+   */
+  const handleClose = () => {
+    if (isMobile && !scannerReady) return;
+    setOpen(false);
+    setScannerReady(false);
+  };
+
   return (
     <>
       <Dialog
         open={open}
         onOpenChange={(isOpen) => {
-          // Si se intenta cerrar (isOpen=false) pero el scanner no está listo, se ignora
+          // En modo individual se evita cerrar el modal si el scanner no está listo
           if (!isOpen && !scannerReady) return;
           setOpen(isOpen);
-
-          // Si cierra, limpiamos el estado
           if (!isOpen) {
             setScannerReady(false);
           }
@@ -75,21 +82,53 @@ const QrModal: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Escanear Código QR</DialogTitle>
             <DialogDescription>
-              Activa la cámara para leer el código QR.
+              {isMobile
+                ? "Activa la cámara para leer el código QR."
+                : "Utiliza el lector para capturar el código QR."}
             </DialogDescription>
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox
+                id="manual-input-checkbox"
+                checked={manualInputEnabled}
+                onCheckedChange={(checked) =>
+                  setManualInputEnabled(checked as boolean)
+                }
+              />
+              <Label htmlFor="manual-input-checkbox">
+                Habilitar ingreso manual
+              </Label>
+            </div>
           </DialogHeader>
 
           <div className="py-4 flex justify-center">
             {open && (
-              <div className="flex flex-col justify-center">
-                <QrScanner
-                  active={open}
-                  onScannerReady={() => setScannerReady(true)}
-                  onScanSuccess={handleQrScanSuccess}
-                  width={300}
-                  height={300}
-                />
-                <QrManualInput onSuccess={handleQrScanSuccess} />
+              <div className="flex flex-col justify-center space-y-4">
+                {isMobile ? (
+                  // En móvil: si el ingreso manual no está habilitado se usa QrScanner, de lo contrario QrManualInput
+                  manualInputEnabled ? (
+                    <QrManualInput onSuccess={handleQrScanSuccess} />
+                  ) : (
+                    <QrScanner
+                      active={open}
+                      onScannerReady={() => setScannerReady(true)}
+                      onScanSuccess={handleQrScanSuccess}
+                      width={300}
+                      height={300}
+                    />
+                  )
+                ) : (
+                  // En escritorio: si el ingreso manual no está habilitado se usa QRReader, de lo contrario QrManualInput
+                  manualInputEnabled ? (
+                    <QrManualInput onSuccess={handleQrScanSuccess} />
+                  ) : (
+                    <>
+                      <QRReader onScanSuccess={handleQrScanSuccess} />
+                      {location.pathname === ROUTES.NUEVA && (
+                        <QRCodeChips />
+                      )}
+                    </>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -98,7 +137,7 @@ const QrModal: React.FC = () => {
             <Button
               variant="outline"
               onClick={handleClose}
-              disabled={!scannerReady}
+              disabled={isMobile && !scannerReady}
             >
               Cerrar
             </Button>
@@ -106,7 +145,7 @@ const QrModal: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de información si se escaneó un QR con éxito */}
+      {/* Modal de información para modo individual */}
       {qrData && (
         <QrModalInfo
           key={qrData.codigo}

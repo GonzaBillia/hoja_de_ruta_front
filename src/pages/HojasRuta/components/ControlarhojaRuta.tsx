@@ -192,7 +192,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
             </div>
           </div>
           <div className="space-y-1 mt-4">
-            <QrModalUpdate />
+            <QrModalUpdate />    
             <Tabladatas data={bultos} />
           </div>
           <DialogFooter>

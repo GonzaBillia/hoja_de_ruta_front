@@ -20,9 +20,18 @@ export const getBulto = async (id: number): Promise<Bulto> => {
 };
 
 // Obtener un bulto por código
-export const getBultoByCode = async (code: string): Promise<Bulto> => {
-  const response = await apiClient.get<BultoResponse>(`/api/bulto/code/${code}`);
-  return response.data.data as Bulto;
+export const getBultoByCode = async (code: string): Promise<Bulto | null> => {
+  try {
+    const response = await apiClient.get<BultoResponse>(`/api/bulto/code/${code}`);
+    return response.data.data as Bulto;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      // Si la respuesta es 404, retornamos null (indica que no existe bulto asociado)
+      return null;
+    }
+    // Para otros errores, relanzamos el error
+    throw error;
+  }
 };
 
 // Crear un nuevo bulto

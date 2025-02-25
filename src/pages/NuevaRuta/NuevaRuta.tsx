@@ -92,7 +92,7 @@ const NuevaRuta = () => {
   }, [selectedRemitos, selectedRepartidor, selectedSucursalId, qrCodes]);
 
   return (
-    <div className="mx-auto min-w-64 max-w-[22rem] md:max-w-[412px] flex flex-col justify-start p-2">
+    <div className="mx-auto min-w-72 max-w-[22rem] md:max-w-[460px] flex flex-col justify-start p-2">
       <SelectRepartidor
         selectedRepartidor={selectedRepartidor}
         onSelect={(r) => setSelectedRepartidor(r)}
