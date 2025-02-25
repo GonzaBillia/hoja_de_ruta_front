@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "npm run preview",
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "cross-env NODE_ENV=development vite --mode development",
+    "build": "cross-env NODE_ENV=production vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview --host --port $PORT"
   },
