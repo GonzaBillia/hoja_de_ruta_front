@@ -7,5 +7,4 @@ const apiClient = axios.create({
   baseURL: HOST, // Reemplaza con la URL de tu backend
   withCredentials: true, // Importante para enviar/recibir cookies
 });
-
 export default apiClient;
