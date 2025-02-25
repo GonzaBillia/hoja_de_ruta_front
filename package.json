@@ -8,7 +8,7 @@
     "dev": "cross-env NODE_ENV=development vite --mode development",
     "build": "cross-env NODE_ENV=production vite build --mode production",
     "lint": "eslint .",
-    "preview": "cross-env NODE_ENV=production vite preview --host --port ${PORT:-8080}"
+    "preview": "cross-env NODE_ENV=production vite preview --host --port $PORT"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.0.0",
