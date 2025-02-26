@@ -43,13 +43,13 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
   // Efecto para procesar cada nuevo código escaneado
   useEffect(() => {
     if (qrCodes.length === 0) return;
-    
+
     const scannedCode = qrCodes[0]?.codigo;
     if (!scannedCode) {
       clearQrCodes();
       return;
     }
-    
+
     const index = bultos.findIndex((b) => b.codigo === scannedCode);
     if (index === -1) {
       toast({
@@ -59,7 +59,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       clearQrCodes();
       return;
     }
-    
+
     const bultoFound = bultos[index];
     if (bultoFound.recibido) {
       toast({
@@ -69,7 +69,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       clearQrCodes();
       return;
     }
-    
+
     const updatedBultos = [...bultos];
     updatedBultos[index] = { ...bultoFound, recibido: true };
     setBultos(updatedBultos);
@@ -80,7 +80,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
   const handleConfirm = () => {
     const allScanned = bultos.every((b) => b.recibido);
     let newEstadoId = 4; // Por defecto, "recibido"
-    
+
     if (!allScanned) {
       if (
         !window.confirm(
@@ -91,12 +91,12 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       }
       newEstadoId = 5; // "recibido incompleto"
     }
-    
+
     // Arma el payload para actualizar los bultos escaneados
     const payload = bultos
       .filter((b) => b.recibido)
       .map((b) => ({ codigo: b.codigo, recibido: true }));
-    
+
     // Actualiza en lote los bultos
     updateBatchBultoMutation.mutate(payload, {
       onSuccess: () => {
@@ -137,7 +137,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <DialogContent>
+        <DialogContent className="overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Controlar Hoja de Ruta: {data?.codigo}</DialogTitle>
           </DialogHeader>
@@ -193,7 +193,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
           </div>
           <div className="space-y-1 mt-4">
             <QrModalUpdate bultos={bultos} setBultos={setBultos} />
-    
+
             <Tabladatas data={bultos} />
           </div>
           <DialogFooter>
@@ -212,7 +212,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       {/* Modal de descarga PDF */}
       <PDFDownloadModal
         isOpen={showPDFModal}
-        onClose={() => setShowPDFModal(false)}
+        onClose={() => {setShowPDFModal(false); onClose()}}
         // Al pulsar "Descargar" en el modal, activamos la generación del PDF
         onDownload={() => setTriggerPDFDownload(true)}
       />

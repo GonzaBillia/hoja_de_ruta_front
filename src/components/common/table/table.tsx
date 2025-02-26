@@ -191,7 +191,7 @@ export default function TablaGenerica<T>({
             >
               Detalles
             </DropdownMenuItem>
-            {isAuthorized(["superadmin", "deposito", "sucursal"]) && (
+            {isAuthorized(["superadmin", "deposito"]) && (
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation()
