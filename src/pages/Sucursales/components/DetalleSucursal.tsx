@@ -48,6 +48,9 @@ const DetalleSucursal: React.FC<DetalleSucursalProps> = ({ rowData, open, onClos
                         <strong>Nombre:</strong> {data.nombre}
                     </p>
                     <p>
+                        <strong>Codigo:</strong> {data.codigo}
+                    </p>
+                    <p>
                         <strong>Dirección:</strong> {data.direccion}
                     </p>
                     {data.telefono && (

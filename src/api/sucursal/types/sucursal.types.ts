@@ -3,7 +3,7 @@ export interface Sucursal {
     nombre: string;
     direccion: string;
     telefono?: string;
-    // Agrega otros campos si es necesario.
+    codigo?: string;
   }
   
   export interface SucursalResponse {
@@ -16,10 +16,12 @@ export interface Sucursal {
     nombre: string;
     direccion: string;
     telefono?: string;
+    codigo?: string;
   }
   
   export interface UpdateSucursalPayload {
     nombre?: string;
     direccion?: string;
     telefono?: string;
+    codigo?: string;
   }

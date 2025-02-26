@@ -7,5 +7,6 @@ export type RowData = {
   sucursal: number
   fechaCreacion: string
   fechaEnvio: string | null
+  fechaRecibidoIncompleto: string | null
   fechaRecibido: string | null
 }

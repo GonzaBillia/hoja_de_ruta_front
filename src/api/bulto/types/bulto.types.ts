@@ -1,16 +1,22 @@
-export interface BultoRouteSheet {
+export interface BultoRouteSheetAttributes {
   route_sheet_id: number;
-  assigned_at: string | Date; // o Date, según cómo manejes las fechas
+  assigned_at: string | Date;
   active: boolean;
+  received?: boolean;
+  delivered_at?: string | Date;
+}
+
+export interface BultoHistoryItem {
+  BultoRouteSheet: BultoRouteSheetAttributes;
 }
 
 export interface Bulto {
   id: number;
   codigo: string;
   route_sheet_id: number;
-  recibido?: boolean;
-  historyRouteSheets?: BultoRouteSheet[];
+  historyRouteSheets?: BultoHistoryItem[];
 }
+
 
   export interface BultoResponse {
     success: boolean;

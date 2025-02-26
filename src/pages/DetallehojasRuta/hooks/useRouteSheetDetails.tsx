@@ -52,22 +52,40 @@ export const useTransformedRouteSheet = (codigo: string) => {
         ? estadoMap.get(routeSheet.estado_id) || "Desconocido"
         : "Desconocido";
 
-    // Filtramos los bultos asociados a esta hoja de ruta (actual o en historial)
-    const associatedBultos = bultos.filter(b => {
-      const isCurrent = b.route_sheet_id === routeSheet.id;
-      const isInHistory =
-        b.historyRouteSheets &&
-        Array.isArray(b.historyRouteSheets) &&
-        b.historyRouteSheets.some((hist: any) =>
-          hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === routeSheet.id
-        );
-      return isCurrent || isInHistory;
-    });
+    // Filtramos los bultos asociados a esta hoja de ruta (ya sea asignados actualmente o en su historial)
+    const associatedBultos = bultos
+  .filter(b => {
+    const isCurrent = b.route_sheet_id === routeSheet.id;
+    const isInHistory =
+      b.historyRouteSheets &&
+      Array.isArray(b.historyRouteSheets) &&
+      b.historyRouteSheets.some((hist: any) =>
+        hist.BultoRouteSheet && hist.BultoRouteSheet.route_sheet_id === routeSheet.id
+      );
+    return isCurrent || isInHistory;
+  })
+  .map(b => {
+    // Se busca el registro activo dentro del historial (aquél cuyo BultoRouteSheet.active es true)
+    const activeHistory =
+      b.historyRouteSheets && Array.isArray(b.historyRouteSheets)
+        ? b.historyRouteSheets.find((hist: any) => hist.BultoRouteSheet && hist.BultoRouteSheet.active)
+        : null;
+    return {
+      ...b,
+      actualRecibido: activeHistory ? activeHistory.BultoRouteSheet.received : false,
+      actualFechaRecibido:
+        activeHistory && activeHistory.BultoRouteSheet.delivered_at
+          ? formatDate(activeHistory.BultoRouteSheet.delivered_at)
+          : "N/A",
+    };
+  });
 
     const createdAtFormatted = routeSheet.created_at ? formatDate(routeSheet.created_at) : "N/A";
     const sentAtFormatted = routeSheet.sent_at ? formatDate(routeSheet.sent_at) : "N/A";
+    const receivedIncompleteFormatted = routeSheet.received_incomplete_at
+      ? formatDate(routeSheet.received_incomplete_at)
+      : "N/A";
     const receivedAtFormatted = routeSheet.received_at ? formatDate(routeSheet.received_at) : "N/A";
-
     return {
       ...routeSheet,
       deposito: depositoName,
@@ -78,6 +96,7 @@ export const useTransformedRouteSheet = (codigo: string) => {
       bultosCount: associatedBultos.length,
       createdAtFormatted,
       sentAtFormatted,
+      receivedIncompleteFormatted,
       receivedAtFormatted,
       // Si no hay remitos, se retorna un arreglo vacío.
       remitos: remitos || [],
@@ -86,11 +105,12 @@ export const useTransformedRouteSheet = (codigo: string) => {
 
   // Ahora, usamos useQueries a nivel superior para cada bulto, siempre y cuando transformedRouteSheet exista.
   const qrQueries = useQueries({
-    queries: transformedRouteSheet?.bultos?.map((bulto: any) => ({
-      queryKey: ["qrcode", bulto.codigo],
-      queryFn: () => getQRCodeById(bulto.codigo),
-      enabled: !!bulto.codigo,
-    })) || [],
+    queries:
+      transformedRouteSheet?.bultos?.map((bulto: any) => ({
+        queryKey: ["qrcode", bulto.codigo],
+        queryFn: () => getQRCodeById(bulto.codigo),
+        enabled: !!bulto.codigo,
+      })) || [],
   });
 
   // Calculamos el recuento por tipo de bulto, comparando el tipo_bulto_id obtenido del QR
@@ -110,7 +130,9 @@ export const useTransformedRouteSheet = (codigo: string) => {
   }, [qrQueries, tiposBultos]);
 
   return {
-    transformedRouteSheet: transformedRouteSheet ? { ...transformedRouteSheet, bultosCountByTipo } : null,
+    transformedRouteSheet: transformedRouteSheet
+      ? { ...transformedRouteSheet, bultosCountByTipo }
+      : null,
     loading:
       loadingRS ||
       loadingSuc ||

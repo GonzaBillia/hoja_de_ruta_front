@@ -1,16 +1,13 @@
-// utils/formatDate.ts
-
-export const formatDate = (
-  date: string | Date,
-  locale: string = 'es-ES',
-  options?: Intl.DateTimeFormatOptions
-): string => {
-  if (!date) return 'N/A'; // Verifica si date es undefined o null
+export const formatDate = (date: string | Date): string => {
+  if (!date) return 'N/A';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return 'N/A'; // Si la fecha no es válida
-  return d.toLocaleDateString(locale, options ?? {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  if (isNaN(d.getTime())) return 'N/A';
+
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const HH = String(d.getHours()).padStart(2, '0');
+  const MM = String(d.getMinutes()).padStart(2, '0');
+
+  return `${dd}/${mm}/${yyyy} ${HH}:${MM}`;
 };

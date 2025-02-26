@@ -9,7 +9,6 @@ import { formatDate } from "@/utils/formatDate";
 import { useQueries } from "@tanstack/react-query";
 import { getEstado } from "@/api/estado/estado";
 
-
 export const useTransformedRouteSheets = (page: number, limit: number) => {
   // Se asume que useRouteSheets acepta page y limit como parámetros
   const { data: routeSheetsResponse, isLoading: loadingRS, error: errorRS } = useRouteSheets(page, limit);
@@ -93,7 +92,23 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
             routeSheetId: hist.BultoRouteSheet.route_sheet_id,
             assignedAt: hist.BultoRouteSheet.assigned_at ? formatDate(hist.BultoRouteSheet.assigned_at) : 'N/A',
             active: hist.BultoRouteSheet.active,
+            received: hist.BultoRouteSheet.received,
+            received_at: hist.BultoRouteSheet.received_at ? formatDate(hist.BultoRouteSheet.received_at) : 'N/A'
           }))
+        };
+      });
+
+      // Creamos la lista de bultos actuales, transformando cada uno para agregar los campos actualRecibido y actualFechaRecibido
+      const currentBultos = bultos.filter(b => b.route_sheet_id === rs.id).map(b => {
+        const activeHistory = b.historyRouteSheets
+          ? b.historyRouteSheets.find((hr: any) => hr.BultoRouteSheet && hr.BultoRouteSheet.active)
+          : null;
+        return {
+          ...b,
+          actualRecibido: activeHistory ? activeHistory.BultoRouteSheet.received : false,
+          actualFechaRecibido: activeHistory && activeHistory.BultoRouteSheet.delivered_at
+            ? formatDate(activeHistory.BultoRouteSheet.delivered_at)
+            : 'N/A'
         };
       });
 
@@ -103,6 +118,9 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
       if (rs.received_at) {
         dateValue = rs.received_at;
         dateType = "Recepción";
+      } else if (rs.received_incomplete_at) {
+        dateValue = rs.received_incomplete_at;
+        dateType = "Recepcion Incompleta";
       } else if (rs.sent_at) {
         dateValue = rs.sent_at;
         dateType = "Envío";
@@ -123,7 +141,7 @@ export const useTransformedRouteSheets = (page: number, limit: number) => {
         sucursal: sucursalName,
         repartidor: repartidorName,
         bultosCount,
-        currentBultos: bultos.filter(b => b.route_sheet_id === rs.id),
+        currentBultos,
         bultosHistorial,
         displayDate,
         displayDateType: dateType,

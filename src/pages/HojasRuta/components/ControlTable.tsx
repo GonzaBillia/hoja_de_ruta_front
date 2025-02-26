@@ -15,19 +15,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Bulto } from "@/api/bulto/types/bulto.types"
-
-export interface RouteSheet {
-  codigo: string
-  escaneado: boolean
-  // Otros campos si es necesario
-}
+import { ExtendedBulto } from "@/pages/HojasRuta/components/ControlarhojaRuta"
 
 interface TablaRouteSheetProps {
-  data: Bulto[]
+  data: ExtendedBulto[]
 }
 
 export default function TablaRouteSheets({ data }: TablaRouteSheetProps) {
+  console.log(data)
   const columns = React.useMemo(
     () => [
       {
@@ -38,11 +33,16 @@ export default function TablaRouteSheets({ data }: TablaRouteSheetProps) {
         ),
       },
       {
-        accessorKey: "recibido",
+        // En lugar de usar accessorKey "recibido", usamos un accessorFn que obtiene el estado del registro activo
+        accessorKey: "actualRecibido",
         header: "Escaneado",
         cell: (info: any) => (
           <span className="pl-4 text-center block">
-            {info.getValue() ? <Check size={16} className="text-green-600" /> : <X size={16} className="text-red-600"/>}
+            {info.getValue() ? (
+              <Check size={16} className="text-green-600" />
+            ) : (
+              <X size={16} className="text-red-600" />
+            )}
           </span>
         ),
       },

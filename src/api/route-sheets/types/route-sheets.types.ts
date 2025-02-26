@@ -10,6 +10,7 @@ export interface RouteSheet {
     created_by?: number;
     deposito_id?: number;
     sent_at?: string | null;
+    received_incomplete_at?: string | null;
     received_at?: string | null;
     remitos?: string[];
     scannedQRCodes?: QrData[]

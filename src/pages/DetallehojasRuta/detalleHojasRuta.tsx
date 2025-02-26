@@ -37,7 +37,7 @@ import GeneratePDFRouteSheet from "../HojasRuta/components/generateRouteSheetPDF
 
 const BultosName: ColumnName[] = [
   { key: "codigo", label: "Codigo QR", opcional: false },
-  { key: "recibido", label: "Recibido", opcional: false },
+  { key: "actualRecibido", label: "Recibido", opcional: false },
 ];
 
 const DeleteObservationButton: React.FC<{ id: number }> = ({ id }) => {

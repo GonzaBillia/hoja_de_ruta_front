@@ -20,6 +20,8 @@ interface EditarSucursalProps {
 const EditarSucursal: React.FC<EditarSucursalProps> = ({ rowData, open, onClose }) => {
   // Inicializamos los estados con los datos de rowData
   const [nombre, setNombre] = useState<string>(rowData.nombre);
+  const [codigo, setCodigo] = useState<string>(rowData.codigo ?? "");
+
   const [direccion, setDireccion] = useState<string>(rowData.direccion);
   const [telefono, setTelefono] = useState<string>(rowData.telefono ?? "");
 
@@ -35,7 +37,7 @@ const EditarSucursal: React.FC<EditarSucursalProps> = ({ rowData, open, onClose 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const payload = { nombre, direccion, telefono };
+    const payload = { nombre, codigo, direccion, telefono };
     updateMutation.mutate(payload, {
       onSuccess: () => {
         onClose();
@@ -57,6 +59,15 @@ const EditarSucursal: React.FC<EditarSucursalProps> = ({ rowData, open, onClose 
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Nombre de la sucursal"
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label htmlFor="codigo">Codigo</Label>
+            <Input
+              id="codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              placeholder="Codigo de la sucursal"
             />
           </div>
           <div className="flex flex-col">

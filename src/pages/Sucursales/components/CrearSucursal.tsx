@@ -20,6 +20,8 @@ const CrearSucursal: React.FC<CrearSucursalProps> = ({ open, onClose }) => {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [codigo, setCodigo] = useState("");
+
 
   const createMutation = useCreateSucursal();
 
@@ -29,6 +31,7 @@ const CrearSucursal: React.FC<CrearSucursalProps> = ({ open, onClose }) => {
       nombre,
       direccion,
       telefono: telefono || undefined,
+      codigo: codigo || undefined
     };
 
     createMutation.mutate(payload, {
@@ -52,6 +55,16 @@ const CrearSucursal: React.FC<CrearSucursalProps> = ({ open, onClose }) => {
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Nombre de la sucursal"
+              required
+            />
+          </div>
+          <div className="flex flex-col space-y-1">
+            <Label htmlFor="codigo">Codigo</Label>
+            <Input
+              id="codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              placeholder="Codigo de la sucursal"
               required
             />
           </div>

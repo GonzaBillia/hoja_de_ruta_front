@@ -22,12 +22,14 @@ import { QrData } from "@/components/common/qr-scanner/types/qr-scanner";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/routes/routeConfig";
 import { useQrContext } from "@/components/context/qr-context";
-import { Bulto } from "@/api/bulto/types/bulto.types";
 import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/utils/formatDate";
+// Importa el tipo extendido que incluye la propiedad currentBultos
+import { ExtendedBulto } from "@/pages/HojasRuta/components/ControlarhojaRuta";
 
 interface QrModalUpdateProps {
-  bultos: Bulto[];
-  setBultos: React.Dispatch<React.SetStateAction<Bulto[]>>;
+  bultos: ExtendedBulto[];
+  setBultos: React.Dispatch<React.SetStateAction<ExtendedBulto[]>>;
 }
 
 const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
@@ -35,8 +37,8 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
   const [scannerReady, setScannerReady] = useState(false);
   const [manualInputEnabled, setManualInputEnabled] = useState(false);
   const location = useLocation();
-  const { clearQrCodes, addQrCode } = useQrContext();
-  const {toast} = useToast();
+  const { clearQrCodes, addQrCode, qrCodes } = useQrContext();
+  const { toast } = useToast();
 
   // Al abrir el modal, limpiamos el contexto para comenzar vacío.
   useEffect(() => {
@@ -46,7 +48,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
   // Para procesar cada nuevo código escaneado
   const [processing, setProcessing] = useState(false);
   const prevQrCodesLength = useRef(0);
-  const { qrCodes } = useQrContext(); // Obtenemos el array de códigos del contexto
 
   useEffect(() => {
     // Si no han aumentado los códigos, no procesamos
@@ -74,7 +75,13 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
     }
 
     const bultoFound = bultos[index];
-    if (bultoFound.recibido) {
+    // Se utiliza currentBultos para obtener el registro activo (se asume que es el primer elemento)
+    const activeCurrent =
+      bultoFound.currentBultos && bultoFound.currentBultos.length > 0
+        ? bultoFound.currentBultos[0]
+        : undefined;
+
+    if (activeCurrent && activeCurrent.actualRecibido) {
       toast({
         title: "Este bulto ya ha sido escaneado",
         variant: "destructive",
@@ -84,17 +91,31 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
       return;
     }
 
-    const updatedBultos = [...bultos];
-    updatedBultos[index] = { ...bultoFound, recibido: true };
-    setBultos(updatedBultos);
+    // Actualiza el registro activo: marca actualRecibido como true y actualFechaRecibido con el timestamp actual
+    if (bultoFound.currentBultos) {
+      const updatedCurrent = bultoFound.currentBultos.map((current, idx) =>
+        idx === 0
+          ? {
+              ...current,
+              actualRecibido: true,
+              actualFechaRecibido: formatDate(new Date()),
+            }
+          : current
+      );
+      const updatedBultos = [...bultos];
+      updatedBultos[index] = { ...bultoFound, currentBultos: updatedCurrent };
+      setBultos(updatedBultos);
+    }
     clearQrCodes();
     setProcessing(false);
   }, [qrCodes, bultos, clearQrCodes, toast, setBultos, processing]);
 
   // Handler para escaneo exitoso (automático o manual)
   const handleQrScanSuccess = (data: QrData) => {
-    if (location.pathname === ROUTES.NUEVA ||
-      location.pathname.startsWith(ROUTES.DETALLE)) {
+    if (
+      location.pathname === ROUTES.NUEVA ||
+      location.pathname.startsWith(ROUTES.DETALLE)
+    ) {
       // En modo "cola": actualizamos el estado directamente
       addQrCode(data);
     } else {
@@ -199,7 +220,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       
     </>
   );
