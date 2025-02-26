@@ -25,14 +25,16 @@ const MANUAL_CODE_LENGTH = 10;
 const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => {
   const [inputCode, setInputCode] = useState("");
   const [codeToFetch, setCodeToFetch] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { toast } = useToast();
   const { qrCodes, addQrCode } = useQrContext();
 
-  // Crear una referencia para el botón
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const location = useLocation()
-  const { isLoading, refetch } = useQuery<QRCode>({
+  const inputRef = useRef<HTMLInputElement>(null); // Ref para el input
+
+  const location = useLocation();
+  const { refetch } = useQuery<QRCode>({
     queryKey: ["qrcode", codeToFetch],
     queryFn: () => getQRCodeById(codeToFetch),
     enabled: !!codeToFetch,
@@ -47,6 +49,8 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
       });
       return;
     }
+
+    setLoading(true);
     const upperCode = inputCode.toUpperCase();
     const finalCode = `${upperCode.slice(0, 2)}-${upperCode.slice(2, 4)}-${upperCode.slice(4)}`;
     setCodeToFetch(finalCode);
@@ -87,15 +91,19 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
         variant: "destructive",
       });
       if (onError) onError(err.message);
+    } finally {
+      // Limpiar el input y volver a hacer foco
+      setInputCode("");
+      inputRef.current?.focus();
+      setLoading(false);
     }
   };
 
-  // Manejador de cambio para el input
   const handleChange = (value: string) => {
     const upperValue = value.toUpperCase();
     setInputCode(upperValue);
     if (upperValue.length === MANUAL_CODE_LENGTH) {
-      // Mover el foco al botón
+      // Opcional: Enfocar el botón si se prefiere
       buttonRef.current?.focus();
     }
   };
@@ -103,6 +111,8 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
   return (
     <div className="mt-4 w-full flex flex-col items-center">
       <InputOTP
+        ref={inputRef} // Se asigna la ref al InputOTP
+        value={inputCode} // Se controla el valor del input
         maxLength={MANUAL_CODE_LENGTH}
         onChange={handleChange}
         className="max-w-24"
@@ -127,12 +137,12 @@ const QrManualInput: React.FC<QrManualInputProps> = ({ onSuccess, onError }) => 
         </InputOTPGroup>
       </InputOTP>
       <Button
-        ref={buttonRef} // Asignamos la referencia al botón
+        ref={buttonRef}
         className="mt-4"
         onClick={handleValidate}
-        disabled={isLoading}
+        disabled={loading}
       >
-        {isLoading ? "Validando..." : "Validar Código"}
+        {loading ? "Validando..." : "Validar Código"}
       </Button>
     </div>
   );

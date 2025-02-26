@@ -149,7 +149,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
                   manualInputEnabled ? (
                     <QrManualInput
                       onSuccess={(data) => {
-                        console.log("QR Escaneado (manual):", data);
                         handleQrScanSuccess(data);
                       }}
                       onError={(error) =>
@@ -161,7 +160,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
                       active={open}
                       onScannerReady={() => setScannerReady(true)}
                       onScanSuccess={(data) => {
-                        console.log("QR Escaneado (móvil):", data);
                         handleQrScanSuccess(data);
                       }}
                       width={300}
@@ -171,7 +169,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
                 ) : manualInputEnabled ? (
                   <QrManualInput
                     onSuccess={(data) => {
-                      console.log("QR Escaneado (manual):", data);
                       handleQrScanSuccess(data);
                     }}
                     onError={(error) =>
@@ -181,7 +178,6 @@ const QrModalUpdate: React.FC<QrModalUpdateProps> = ({ bultos, setBultos }) => {
                 ) : (
                   <QRReader
                     onScanSuccess={(data) => {
-                      console.log("QR Escaneado (escritorio):", data);
                       handleQrScanSuccess(data);
                     }}
                     onScanError={(error) =>

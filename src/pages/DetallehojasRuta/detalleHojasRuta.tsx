@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Edit, X } from "lucide-react";
+import { ArrowLeft, Download, Edit, X } from "lucide-react";
 import TablaGenerica from "@/components/common/table/table";
 import { ColumnName } from "@/components/common/table/types/table";
 import {
@@ -33,6 +33,7 @@ import { Observation } from "@/api/observation/types/observation.types";
 import EditarHojaRuta from "../HojasRuta/components/EditarHojaRuta";
 import WarningModal from "./components/WarningModal"; // Asegúrate de ajustar la ruta según tu estructura
 import ControlarHojaRuta from "../HojasRuta/components/ControlarhojaRuta";
+import GeneratePDFRouteSheet from "../HojasRuta/components/generateRouteSheetPDF";
 
 const BultosName: ColumnName[] = [
   { key: "codigo", label: "Codigo QR", opcional: false },
@@ -87,6 +88,9 @@ const RouteSheetDetail: React.FC = () => {
 
   // Estado para controlar la apertura del WarningModal
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+
+  // Estado para activar el componente GeneratePDFRouteSheet
+  const [showPDF, setShowPDF] = useState(false);
 
   const updateMutation = useUpdateObservation(editingObservation ? editingObservation.id : -1);
 
@@ -205,8 +209,12 @@ const RouteSheetDetail: React.FC = () => {
       </div>
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            Detalle de la Hoja de Ruta: {routeSheet.codigo}
+          <CardTitle className="text-2xl font-bold flex justify-between">
+            <span>Detalle de la Hoja de Ruta: {routeSheet.codigo}</span>
+            {/* Se corrige el onClick para activar el componente PDF mediante estado */}
+            <Button variant="outline" onClick={() => setShowPDF(true)}>
+              <Download />
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -393,6 +401,9 @@ const RouteSheetDetail: React.FC = () => {
         />
       )}
       
+      {/* Renderizado condicional del componente GeneratePDFRouteSheet */}
+      {showPDF && <GeneratePDFRouteSheet codigo={routeSheet.codigo} onComplete={() => setShowPDF(false)} />}
+
       <div className="h-20" />
     </div>
   );
