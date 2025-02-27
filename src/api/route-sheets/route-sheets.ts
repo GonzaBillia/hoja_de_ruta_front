@@ -56,6 +56,5 @@ export const updateRouteSheetState = async (
   payload: UpdateRouteSheetStatePayload
 ): Promise<RouteSheet> => {
   const response = await apiClient.put<{ success: boolean; data: RouteSheet }>(`/api/route-sheet/${codigo}/state`, payload);
-  console.log(response.data.data)
   return response.data.data;
 };

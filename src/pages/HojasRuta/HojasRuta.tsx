@@ -13,7 +13,6 @@ const HojasRutaContainer = () => {
 
   const { transformedData, meta, loading, error } = useTransformedRouteSheets(page, limit);
 
-  console.log(transformedData)
   // Definición de columnas, usando el label dinámico para la columna de fecha
   const columnNames: ColumnName[] = useMemo(() => {
     return [

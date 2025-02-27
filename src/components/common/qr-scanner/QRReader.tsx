@@ -69,7 +69,6 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
           tipoBultoId: result.data.tipo_bulto_id,
           serial: result.data.serial,
         };
-        console.log(validatedQr);
         if (allowMultiple) {
           // Verifica duplicados antes de agregar
           const isDuplicate = qrCodes.some((qr) => qr.codigo === validatedQr.codigo);
