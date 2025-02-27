@@ -123,11 +123,12 @@ const QrModal: React.FC = () => {
                   ) : (
                     <>
                       <QRReader onScanSuccess={handleQrScanSuccess} />
-                      {location.pathname === ROUTES.NUEVA && (
-                        <QRCodeChips />
-                      )}
+
                     </>
                   )
+                )}
+                {location.pathname === ROUTES.NUEVA && (
+                  <QRCodeChips />
                 )}
               </div>
             )}

@@ -101,7 +101,7 @@ export const generateRecepcionPDF = (routeSheet: any) => {
     // Preparamos la data para la tabla: cada fila es [Código QR, Recibido]
     const tableBody = routeSheet.bultos.map((bulto: any) => [
         bulto.codigo,
-        bulto.recibido ? "SI" : "NO",
+        bulto.actualRecibido ? "SI" : "NO",
     ]);
 
     // Usamos jspdf-autotable para generar la tabla

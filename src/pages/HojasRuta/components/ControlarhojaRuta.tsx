@@ -19,6 +19,16 @@ import { useQrContext } from "@/components/context/qr-context";
 import PDFDownloadModal from "./DownloadPDFModal";
 import GeneratePDFRouteSheet from "./generateRouteSheetPDF";
 import { formatDate } from "@/utils/formatDate";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface ControlarHojaRutaProps {
   isOpen: boolean;
@@ -27,17 +37,14 @@ interface ControlarHojaRutaProps {
 }
 
 export interface ExtendedBulto extends Bulto {
-  // currentBultos contendrá el registro activo (o los activos) del historial
-  currentBultos?: {
-    actualRecibido: boolean;
-    actualFechaRecibido: string;
-    // Puedes agregar otros campos si lo requieres (por ejemplo, delivered_at, etc.)
-  }[];
+  actualRecibido: boolean;
+  actualFechaRecibido: string;
+  // Puedes agregar otros campos si lo requieres (por ejemplo, delivered_at, etc.)
 }
 
 const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, data }) => {
   const { toast } = useToast();
-  // Se espera que data.bultos ya tenga la propiedad currentBultos, gracias al hook routeSheetDetails.
+  // Se espera que data.bultos ya tenga las propiedades actualRecibido y actualFechaRecibido
   const [bultos, setBultos] = useState<ExtendedBulto[]>(data.bultos);
   const updateRouteSheetMutation = useUpdateRouteSheetState(data.codigo);
   const updateBatchBultoMutation = useUpdateBatchBulto();
@@ -45,6 +52,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
 
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [triggerPDFDownload, setTriggerPDFDownload] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Procesa cada código QR escaneado
   useEffect(() => {
@@ -68,13 +76,7 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
     }
 
     const bultoFound = bultos[index];
-    // Se usa currentBultos para obtener el registro activo (se asume que es el primer elemento)
-    const activeCurrent =
-      bultoFound.currentBultos && bultoFound.currentBultos.length > 0
-        ? bultoFound.currentBultos[0]
-        : undefined;
-
-    if (activeCurrent && activeCurrent.actualRecibido) {
+    if (bultoFound.actualRecibido) {
       toast({
         title: "Este bulto ya ha sido escaneado",
         variant: "destructive",
@@ -83,51 +85,30 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       return;
     }
 
-    // Actualiza el registro activo: marca actualRecibido como true y actualFechaRecibido con el timestamp actual
-    if (bultoFound.currentBultos) {
-      const updatedCurrent = bultoFound.currentBultos.map((current, idx) =>
-        idx === 0
-          ? {
-              ...current,
-              actualRecibido: true,
-              actualFechaRecibido: formatDate(new Date()),
-            }
-          : current
-      );
-      const updatedBultos = [...bultos];
-      updatedBultos[index] = { ...bultoFound, currentBultos: updatedCurrent };
-      setBultos(updatedBultos);
-    }
+    // Actualiza el bulto: marca actualRecibido como true y actualFechaRecibido con el timestamp actual
+    const updatedBulto = {
+      ...bultoFound,
+      actualRecibido: true,
+      actualFechaRecibido: formatDate(new Date()),
+    };
+
+    const updatedBultos = [...bultos];
+    updatedBultos[index] = updatedBulto;
+    setBultos(updatedBultos);
     clearQrCodes();
   }, [qrCodes, bultos, clearQrCodes, toast]);
 
-  // Handler del botón "Confirmar"
-  const handleConfirm = () => {
-    // Se verifica que en cada bulto el registro activo tenga actualRecibido verdadero
-    const allScanned = bultos.every((b) => {
-      const activeCurrent =
-        b.currentBultos && b.currentBultos.length > 0 ? b.currentBultos[0] : undefined;
-      return activeCurrent?.actualRecibido;
-    });
-    let newEstadoId = 4; // Estado por defecto: "recibido"
-
-    if (!allScanned) {
-      if (!window.confirm("No todos los bultos han sido escaneados. ¿Desea proceder de todas formas?")) {
-        return;
-      }
-      newEstadoId = 5; // "recibido incompleto"
-    }
-
-    // Se arma el payload utilizando el código del bulto; el backend actualiza el registro activo basado en ello.
+  // Función que procesa la actualización de bultos y hoja de ruta
+  const submitBultos = (estadoId: number) => {
     const payload = bultos
-      .filter((b) => b.currentBultos && b.currentBultos.length > 0)
+      .filter((b) => b.actualRecibido)
       .map((b) => ({ codigo: b.codigo, recibido: true }));
 
     updateBatchBultoMutation.mutate(payload, {
       onSuccess: () => {
         toast({ title: "Bultos actualizados correctamente", variant: "success" });
         updateRouteSheetMutation.mutate(
-          { estado_id: newEstadoId },
+          { estado_id: estadoId },
           {
             onSuccess: () => {
               toast({ title: "Hoja de ruta actualizada correctamente", variant: "success" });
@@ -143,6 +124,17 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
         toast({ title: "Error al actualizar los bultos", variant: "destructive" });
       },
     });
+  };
+
+  // Handler del botón "Confirmar"
+  const handleConfirm = () => {
+    const allScanned = bultos.every((b) => b.actualRecibido);
+    if (!allScanned) {
+      setShowConfirmModal(true);
+      return;
+    }
+    // Si todos los bultos han sido escaneados, se procede con el estado "recibido" (estado_id 4)
+    submitBultos(4);
   };
 
   const isProcessing = updateBatchBultoMutation.isPending || updateRouteSheetMutation.isPending;
@@ -237,6 +229,31 @@ const ControlarHojaRuta: React.FC<ControlarHojaRutaProps> = ({ isOpen, onClose, 
       {triggerPDFDownload && (
         <GeneratePDFRouteSheet codigo={data.codigo} onComplete={handleDownloadComplete} />
       )}
+
+      {/* Modal de confirmación para proceder con bultos incompletos */}
+      <AlertDialog open={showConfirmModal} onOpenChange={(open: any) => { if (!open) setShowConfirmModal(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar acción</AlertDialogTitle>
+            <AlertDialogDescription>
+              No todos los bultos han sido escaneados. ¿Desea proceder de todas formas?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmModal(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowConfirmModal(false);
+                submitBultos(5);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -22,7 +22,6 @@ interface TablaRouteSheetProps {
 }
 
 export default function TablaRouteSheets({ data }: TablaRouteSheetProps) {
-  console.log(data)
   const columns = React.useMemo(
     () => [
       {
