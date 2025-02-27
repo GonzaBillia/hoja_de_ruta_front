@@ -212,7 +212,7 @@ const RouteSheetDetail: React.FC = () => {
           <CardTitle className="text-2xl font-bold flex justify-between">
             <span>Detalle de la Hoja de Ruta: {routeSheet.codigo}</span>
             {/* Se corrige el onClick para activar el componente PDF mediante estado */}
-            <Button variant="outline" onClick={() => setShowPDF(true)}>
+            <Button variant="outline" onClick={() => setShowPDF(true)} disabled={routeSheet.estado_id === 1}>
               <Download />
             </Button>
           </CardTitle>
@@ -225,38 +225,37 @@ const RouteSheetDetail: React.FC = () => {
                 {routeSheet.estado || routeSheet.estado_id}
               </p>
               <p className="capitalize">
-                <strong>Depósito:</strong>{" "}
-                {routeSheet.deposito || routeSheet.deposito_id}
-              </p>
-              <p className="capitalize">
-                <strong>Fecha de Creación:</strong>{" "}
-                {routeSheet.createdAtFormatted || "-"}
-              </p>
-            </div>
-            <div>
-              <p className="capitalize">
                 <strong>Repartidor a Cargo:</strong>{" "}
                 {routeSheet.repartidor || routeSheet.repartidor_id}
               </p>
+
+            </div>
+            <div>
+              <p className="capitalize">
+                <strong>Depósito:</strong>{" "}
+                {routeSheet.deposito || routeSheet.deposito_id}
+              </p>
+
               <p className="capitalize">
                 <strong>Sucursal de Destino:</strong>{" "}
                 {routeSheet.sucursal || routeSheet.sucursal_id}
               </p>
-              <p className="capitalize">
-                <strong>Total de Bultos:</strong>{" "}
-                {routeSheet.bultosCount ?? 0}
-              </p>
+
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="mt-4 space-y-2">
               <p className="capitalize">
-                <strong>Fecha de Envío:</strong>{" "}
-                {routeSheet.sentAtFormatted || "Pendiente"}
+                <strong>Fecha:</strong>{" "}
+                {routeSheet.receivedAtFormatted ||
+                  routeSheet.receivedIncompleteFormatted ||
+                  routeSheet.sentAtFormatted ||
+                  routeSheet.createdAtFormatted ||
+                  "-"}
               </p>
               <p className="capitalize">
-                <strong>Fecha de Recepción:</strong>{" "}
-                {routeSheet.receivedAtFormatted || "Pendiente"}
+                <strong>Total de Bultos:</strong>{" "}
+                {routeSheet.bultosCount ?? 0}
               </p>
             </div>
             <div className="mt-4 space-y-2">
@@ -387,10 +386,10 @@ const RouteSheetDetail: React.FC = () => {
           />
         </CardContent>
       </Card>
-      
+
       {/* Se integra el WarningModal condicionalmente */}
       {isWarningModalOpen && (
-        <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} codigo={routeSheet.codigo} setIsControlModalOpen={setIsControlModalOpen}/>
+        <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} codigo={routeSheet.codigo} setIsControlModalOpen={setIsControlModalOpen} />
       )}
 
       {isControlModalOpen && (
@@ -400,7 +399,7 @@ const RouteSheetDetail: React.FC = () => {
           data={routeSheet}
         />
       )}
-      
+
       {/* Renderizado condicional del componente GeneratePDFRouteSheet */}
       {showPDF && <GeneratePDFRouteSheet codigo={routeSheet.codigo} onComplete={() => setShowPDF(false)} />}
 

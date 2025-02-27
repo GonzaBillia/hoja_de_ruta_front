@@ -17,6 +17,7 @@ import useTiposBultos from "@/api/tipos-bulto/hooks/useTiposBulto";
 import { TipoBulto } from "@/api/tipos-bulto/types/tiposBulto.types";
 import useEstados from "@/api/estado/hooks/useEstados";
 import { Estado } from "@/api/estado/types/estado.types";
+import useSucursal from "@/api/sucursal/hooks/useSucursal";
 
 interface QrModalInfoProps {
   qrData: QrData;
@@ -36,6 +37,7 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
 
   // Hook para traer la información del RouteSheet a partir del routesheet_id del bulto
   const { data: routeSheet, refetch: refetchRouteSheet } = useRouteSheet(bulto?.route_sheet_id || 0);
+  const { data: sucursal, refetch: refetchSucursal } = useSucursal(routeSheet?.sucursal_id || 0)
 
   // Cuando el componente se monta o cambia el qrData se busca el bulto asociado
   useEffect(() => {
@@ -48,6 +50,12 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
       refetchRouteSheet();
     }
   }, [bulto, refetchRouteSheet]);
+
+  useEffect(() => {
+    if (routeSheet && routeSheet.sucursal_id) {
+      refetchSucursal()
+    }
+  },[routeSheet, refetchSucursal])
 
   // Se extrae el nombre del tipo de bulto según el id (se asume que existe la propiedad "tipoBultoId")
   const tipoBultoNombre =
@@ -83,21 +91,18 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
           </div>
 
           {/* Información del bulto */}
-          {bulto === null ? (
+          {bulto === null || sucursal === null ? (
             <p>El código no está en USO.</p>
-          ) : bulto ? (
+          ) : bulto && sucursal ? (
             <div className="border p-3 rounded-md">
-              <p>
-                <span className="font-semibold">ID del Bulto:</span> {bulto.id}
-              </p>
-              <p>
-                <span className="font-semibold">RouteSheet ID:</span> {bulto.route_sheet_id}
-              </p>
               {tipoBultoNombre && (
                 <p>
                   <span className="font-semibold">Tipo de Bulto:</span> {tipoBultoNombre}
                 </p>
               )}
+              <p>
+                <span className="font-semibold">Sucursal:</span> {sucursal.nombre}
+              </p>
             </div>
           ) : (
             <p>Buscando información del bulto...</p>
@@ -106,30 +111,36 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
           {/* Información del RouteSheet */}
           {routeSheet && (
             <div className="border p-3 rounded-md">
-              <h4 className="font-bold mb-1">Información del RouteSheet</h4>
+              <h4 className="font-bold mb-1">Información de la Hoja de Ruta</h4>
               <div className="text-sm">
                 <p>
                   <span className="font-semibold">Código:</span> {routeSheet.codigo}
                 </p>
                 <p>
-                  <span className="font-semibold">Estado:</span> {estadoNombre}
+                  <span className="font-semibold">Estado Actual:</span> {estadoNombre}
                 </p>
                 <p>
                   <span className="font-semibold">Creado:</span>{" "}
                   {new Date(routeSheet.created_at).toLocaleString()}
                 </p>
-                <p>
+                {routeSheet.sent_at && (
+                  <p>
                   <span className="font-semibold">Enviado:</span>{" "}
                   {routeSheet.sent_at ? new Date(routeSheet.sent_at).toLocaleString() : "No enviado"}
                 </p>
-                <p>
+                )}
+                {routeSheet.received_incomplete_at && (
+                  <p>
+                  <span className="font-semibold">Recibido Incompleto:</span>{" "}
+                  {routeSheet.received_incomplete_at ? new Date(routeSheet.received_incomplete_at).toLocaleString() : "No recibido"}
+                </p>
+                )}
+                {routeSheet.received_at && (
+                  <p>
                   <span className="font-semibold">Recibido:</span>{" "}
                   {routeSheet.received_at ? new Date(routeSheet.received_at).toLocaleString() : "No recibido"}
                 </p>
-                <p>
-                  <span className="font-semibold">Depósito:</span>{" "}
-                  {deposito ? deposito.nombre : routeSheet.deposito_id}
-                </p>
+                )}
               </div>
             </div>
           )}
@@ -143,9 +154,6 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
               </p>
               <p>
                 <span className="font-semibold">Nombre:</span> {deposito.nombre}
-              </p>
-              <p>
-                <span className="font-semibold">Ubicación:</span> {deposito.ubicacion}
               </p>
             </div>
           )}
