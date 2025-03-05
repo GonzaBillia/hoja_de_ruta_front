@@ -168,6 +168,7 @@ const RouteSheetDetail: React.FC = () => {
     }
   };
 
+
   return (
     <div className="p-4 flex-1 max-w-3xl mx-auto">
       <div className="flex justify-between">
@@ -247,12 +248,19 @@ const RouteSheetDetail: React.FC = () => {
             <div className="mt-4 space-y-2">
               <p className="capitalize">
                 <strong>Fecha:</strong>{" "}
-                {routeSheet.receivedAtFormatted ||
-                  routeSheet.receivedIncompleteFormatted ||
-                  routeSheet.sentAtFormatted ||
-                  routeSheet.createdAtFormatted ||
-                  "-"}
+                {(() => {
+                  const fechas = [
+                    routeSheet.receivedAtFormatted,
+                    routeSheet.receivedIncompleteFormatted,
+                    routeSheet.sentAtFormatted,
+                    routeSheet.createdAtFormatted,
+                  ];
+                  // Retorna la primera fecha válida (ni vacía ni "N/A"), o "-" en caso de no encontrar ninguna.
+                  const fechaPrioritaria = fechas.find((fecha) => fecha && fecha !== "N/A");
+                  return fechaPrioritaria || "-";
+                })()}
               </p>
+
               <p className="capitalize">
                 <strong>Total de Bultos:</strong>{" "}
                 {routeSheet.bultosCount ?? 0}

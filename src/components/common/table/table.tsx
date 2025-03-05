@@ -158,55 +158,71 @@ export default function TablaGenerica<T>({
   const actionsColumn: ColumnDef<T> = {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => (
-      <div
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-6 w-6 p-0">
-              <span className="sr-only">Opciones</span>
-              <MoreHorizontal className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDownloadPDF(row.original)
-              }}
+    cell: ({ row }) => {
+      // Convertir row.original a any para acceder a la propiedad "estado"
+      const rowData = row.original as any;
+      const estadoRow = rowData.estadoDisplay ? rowData.estadoDisplay.toLowerCase() : "";
+      const disablePDF = estadoRow === "creado";
+      const disableEdit =
+        isAuthorized(["deposito"]) &&
+        (estadoRow === "recibido" || estadoRow === "recibido incompleto");
+  
+      return (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-6 w-6 p-0">
+                <span className="sr-only">Opciones</span>
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
-              Descargar PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                handleClick("view", row.original)
-              }}
-            >
-              Detalles
-            </DropdownMenuItem>
-            {isAuthorized(["superadmin", "deposito"]) && (
               <DropdownMenuItem
                 onClick={(e) => {
-                  e.stopPropagation()
-                  handleClick("edit", row.original)
+                  if (!disablePDF) {
+                    e.stopPropagation();
+                    handleDownloadPDF(rowData);
+                  }
+                }}
+                disabled={disablePDF}
+              >
+                Descargar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClick("view", rowData);
                 }}
               >
-                Editar
+                Detalles
               </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    ),
-  }
-
+              {isAuthorized(["superadmin", "deposito"]) && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    if (!disableEdit) {
+                      e.stopPropagation();
+                      handleClick("edit", rowData);
+                    }
+                  }}
+                  disabled={disableEdit}
+                >
+                  Editar
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+  };
+  
   const columns: ColumnDef<T>[] = showActions
     ? [...baseColumns, actionsColumn]
     : baseColumns

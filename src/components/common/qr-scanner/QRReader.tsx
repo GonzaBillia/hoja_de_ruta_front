@@ -156,14 +156,14 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
     <div className="relative flex flex-col justify-center space-y-4 min-h-[100px]">
       {processing && (
         <>
-        <FullScreenLoader /> 
-        <label className="text-sm font-medium">Procesando Codigo QR</label>
+          <FullScreenLoader />
+          <label className="text-sm font-medium">Procesando Codigo QR</label>
 
         </>
-        )}
+      )}
       {!processing && (
         <>
-        <label className="text-sm font-medium">Escanea el Código QR con el Lector</label>
+          <label className="text-sm font-medium">Escanea el Código QR con el Lector</label>
         </>
       )}
       <input

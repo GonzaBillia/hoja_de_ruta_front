@@ -1,26 +1,31 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-export const generateRecepcionPDF = (routeSheet: any) => {
-    // Creamos el documento en formato A4
+export const generateRecepcionPDF = (routeSheet: any): void => {
+    // Configuración base del documento
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const marginLeft = 14;
-    const marginRight = doc.internal.pageSize.getWidth() - 14;
+    const marginRight = pageWidth - 14;
+    // Definir paddings
+    const contentPaddingTop = 2;  // espacio interno superior de cada sección
+    const contentPaddingBottom = 1; // espacio interno inferior (reducido)
+    const titlePadding = 4;       // separación extra para los títulos respecto del borde
     let yPos = 20;
 
-    // Título principal
-    doc.setFontSize(24);
+    // Establecemos grosor de borde reducido para los recuadros
+    doc.setLineWidth(0.2);
+
+    // ---------------------------------
+    // Encabezado principal
+    // ---------------------------------
+    doc.setFontSize(20);
     doc.setTextColor(40);
     doc.setFont("helvetica", "bold");
-    doc.text("Comprobante de Recepción", marginLeft, yPos);
+    doc.text(`Comprobante de Recepción: ${routeSheet.codigo}`, marginLeft, yPos);
 
-    // Subtítulo
-    yPos += 10;
-    doc.setFontSize(18);
-    doc.text(`Hoja de Ruta: ${routeSheet.codigo}`, marginLeft, yPos);
-
-
-    // Mostrar el estado actual en negrita justo debajo
+    // Estado Actual en negrita
     yPos += 10;
     doc.setFontSize(16);
     const estado = routeSheet.estado || routeSheet.estado_id;
@@ -28,85 +33,151 @@ export const generateRecepcionPDF = (routeSheet: any) => {
     const capitalizedEstado = estadoStr.charAt(0).toUpperCase() + estadoStr.slice(1);
     doc.text(`Estado Actual: ${capitalizedEstado}`, marginLeft, yPos);
 
-
-    // Línea divisoria para separar encabezado
+    // Línea divisoria del encabezado
     yPos += 6;
     doc.setLineWidth(0.5);
     doc.line(marginLeft, yPos, marginRight, yPos);
+    doc.setLineWidth(0.2);
 
-    // Datos Generales
-    yPos += 10;
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Datos Generales", marginLeft, yPos);
-
+    // ---------------------------------
+    // Sección: Datos Generales
+    // ---------------------------------
     yPos += 8;
+    const datosSectionStart = yPos;
+    yPos += contentPaddingTop; // Padding superior
+
+    // Título con línea divisoria
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Datos Generales", marginLeft + titlePadding, yPos + titlePadding);
+    const datosTitleDividerY = yPos + titlePadding + 2;
+    doc.line(marginLeft + titlePadding, datosTitleDividerY, marginRight - titlePadding, datosTitleDividerY);
+    // Desplazamos el contenido 6 mm debajo de la línea divisoria
+    yPos = datosTitleDividerY + 6;
+
+    // Dividir en dos columnas
+    const columnWidth = (pageWidth - 2 * marginLeft - 2 * contentPaddingTop) / 2;
+    const leftX = marginLeft + contentPaddingTop;
+    const rightX = leftX + columnWidth;
+
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text(`Depósito: ${routeSheet.deposito || routeSheet.deposito_id}`, marginLeft, yPos);
-    yPos += 6;
-    doc.text(`Fecha de Creación: ${routeSheet.createdAtFormatted || "-"}`, marginLeft, yPos);
-    yPos += 6;
-    doc.text(`Fecha de Envío: ${routeSheet.sentAtFormatted || "-"}`, marginLeft, yPos);
-    yPos += 6;
-    doc.text(`Repartidor: ${routeSheet.repartidor || routeSheet.repartidor_id}`, marginLeft, yPos);
-    yPos += 6;
-    doc.text(`Sucursal: ${routeSheet.sucursal || routeSheet.sucursal_id}`, marginLeft, yPos);
-    yPos += 6;
-    doc.text(`Total de Bultos: ${routeSheet.bultosCount ?? 0}`, marginLeft, yPos);
+    // Campos para la columna izquierda
+    const fechaRecepcion = routeSheet.receivedAtFormatted
+        ? routeSheet.receivedAtFormatted
+        : (routeSheet.receivedIncompleteFormatted ? routeSheet.receivedIncompleteFormatted : "-");
 
-    // Remitos Asociados
-    yPos += 10;
+    const leftFields = [
+        `Depósito: ${routeSheet.deposito || routeSheet.deposito_id}`,
+        `Fecha de Recepción: ${fechaRecepcion}`,
+    ];
+
+    // Campos para la columna derecha
+    const rightFields = [
+        `Repartidor: ${routeSheet.repartidor || routeSheet.repartidor_id}`,
+        `Sucursal: ${routeSheet.sucursal || routeSheet.sucursal_id}`,
+    ];
+
+    let leftY = yPos;
+    leftFields.forEach((line) => {
+        doc.text(line, leftX, leftY);
+        leftY += 6;
+    });
+    let rightY = yPos;
+    rightFields.forEach((line) => {
+        doc.text(line, rightX, rightY);
+        rightY += 6;
+    });
+    const contentEndY = Math.max(leftY, rightY);
+    yPos = contentEndY;
+    const datosSectionEnd = yPos + contentPaddingBottom;
+    // Dibujar el borde de Datos Generales
+    doc.rect(marginLeft, datosSectionStart, pageWidth - 2 * marginLeft, datosSectionEnd - datosSectionStart, "S");
+    yPos = datosSectionEnd + 6;
+
+    // ---------------------------------
+    // Sección: Recuento (Remitos y Bultos)
+    // ---------------------------------
+    const recuentoSectionStart = yPos;
+    yPos += contentPaddingTop;
     doc.setFont("helvetica", "bold");
-    doc.text("Remitos Asociados:", marginLeft, yPos);
+    doc.setFontSize(16);
+    // Título de la sección con línea divisoria
+    doc.text("Recuento", marginLeft + titlePadding, yPos + titlePadding);
+    const recuentoTitleDividerY = yPos + titlePadding + 2;
+    doc.line(marginLeft + titlePadding, recuentoTitleDividerY, marginRight - titlePadding, recuentoTitleDividerY);
+    yPos = recuentoTitleDividerY + 6;
+
+    // Dividir la sección en dos columnas
+    const recuentoColumnWidth = (pageWidth - 2 * marginLeft - 2 * contentPaddingTop) / 2;
+    const recLeftX = marginLeft + contentPaddingTop;
+    const recRightX = recLeftX + recuentoColumnWidth;
+
+    // Calcular totales
+    const remitosCount = routeSheet.remitos ? routeSheet.remitos.length : 0;
+    const totalBultos = routeSheet.bultosCount ?? 0;
+    // Encabezados con totales
+    const remitosHeader = `Remitos: [total: ${remitosCount}]`;
+    const bultosHeader = `Bultos: [total: ${totalBultos}]`;
+    doc.setFontSize(14);
+    doc.text(remitosHeader, recLeftX, yPos);
+    doc.text(bultosHeader, recRightX, yPos);
     yPos += 6;
+
+    // Columna izquierda: Lista de remitos
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    let remitosY = yPos;
     if (routeSheet.remitos && routeSheet.remitos.length > 0) {
         routeSheet.remitos.forEach((remito: any) => {
-            doc.text(`- ${remito.external_id}`, marginLeft + 4, yPos);
-            yPos += 6;
+            doc.text(`- ${remito.external_id}`, recLeftX, remitosY);
+            remitosY += 5;
         });
     } else {
-        doc.text("No hay remitos asignados.", marginLeft + 4, yPos);
-        yPos += 6;
+        doc.text("Sin remitos", recLeftX, remitosY);
+        remitosY += 5;
     }
+    // Columna derecha: Recuento de bultos por tipo
+    let bultosY = yPos;
+    if (routeSheet.bultosCountByTipo && Object.keys(routeSheet.bultosCountByTipo).length > 0) {
+        const entries = Object.entries(routeSheet.bultosCountByTipo);
+        console.log('Entries:', entries);
+        for (const [tipo, count] of entries) {
+          doc.text(`${tipo}: ${count}`, recRightX, bultosY);
+          bultosY += 5;
+        }
+      } else {
+        doc.text("Sin datos", recRightX, bultosY);
+        bultosY += 5;
+      }
+      
 
-    // Línea divisoria extra
-    yPos += 2;
-    doc.setLineWidth(0.3);
-    doc.line(marginLeft, yPos, marginRight, yPos);
+    const recuentoContentEnd = Math.max(remitosY, bultosY);
+    const recuentoSectionEnd = recuentoContentEnd + contentPaddingBottom;
+    doc.rect(marginLeft, recuentoSectionStart, pageWidth - 2 * marginLeft, recuentoSectionEnd - recuentoSectionStart, "S");
+    yPos = recuentoSectionEnd + 6;
 
-    // Sección: Recuento de Bultos (igual que en el otro PDF)
-    yPos += 10;
+    // ---------------------------------
+    // Sección: Detalle de Bultos (Tabla)
+    // ---------------------------------
+    const detalleSectionStart = yPos;
+    yPos += contentPaddingTop;
     doc.setFont("helvetica", "bold");
-    doc.text("Recuento de Bultos:", marginLeft, yPos);
-    yPos += 6;
-    doc.setFont("helvetica", "normal");
-    if (routeSheet.bultosCountByTipo) {
-        Object.entries(routeSheet.bultosCountByTipo).forEach(([tipo, count]) => {
-            doc.text(`${tipo}: ${count}`, marginLeft + 4, yPos);
-            yPos += 6;
-        });
-    } else {
-        doc.text("Sin información de recuento.", marginLeft + 4, yPos);
-        yPos += 6;
-    }
+    doc.setFontSize(16);
+    doc.text("Detalle de Bultos", marginLeft + titlePadding, yPos + titlePadding);
+    const detalleTitleDividerY = yPos + titlePadding + 2;
+    doc.line(marginLeft + titlePadding, detalleTitleDividerY, marginRight - titlePadding, detalleTitleDividerY);
+    yPos = detalleTitleDividerY + 6;
 
-    // Detalle de Bultos: se muestra una tabla con dos columnas ("Código QR" y "Recibido")
-    yPos += 10;
-    doc.setFont("helvetica", "bold");
-    doc.text("Detalle de Bultos", marginLeft, yPos);
-    yPos += 4;
-
-    // Preparamos la data para la tabla: cada fila es [Código QR, Recibido]
+    // Preparar la data para la tabla: [Código QR, Recibido]
     const tableBody = routeSheet.bultos.map((bulto: any) => [
         bulto.codigo,
         bulto.actualRecibido ? "SI" : "NO",
     ]);
 
-    // Usamos jspdf-autotable para generar la tabla
+    const tableStartY = yPos;
     (doc as any).autoTable({
-        startY: yPos,
+        startY: tableStartY,
         head: [["Código QR", "Recibido"]],
         body: tableBody,
         styles: {
@@ -121,33 +192,31 @@ export const generateRecepcionPDF = (routeSheet: any) => {
         },
         theme: "grid",
     });
+    const tableEndY = (doc as any).lastAutoTable.finalY;
+    const detalleSectionEnd = tableEndY + contentPaddingBottom;
+    doc.rect(marginLeft, detalleSectionStart, pageWidth - 2 * marginLeft, detalleSectionEnd - detalleSectionStart, "S");
+    yPos = detalleSectionEnd;
 
-    // Obtener el alto y ancho de la página
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Definir la posición vertical para las firmas (por ejemplo, 30mm desde el final)
+    // ---------------------------------
+    // Sección: Firmas
+    // ---------------------------------
+    // Posición para las firmas (por ejemplo, 30 mm desde el final)
     const signatureY = pageHeight - 30;
-
-    // Definimos el ancho disponible para el texto de firma (por ejemplo, 60mm)
     const signatureWidth = 50;
-
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-
-    // Para el lado izquierdo (Firma del Repartidor)
+    // Firma del Repartidor (lado izquierdo)
     doc.line(marginLeft, signatureY, marginLeft + signatureWidth, signatureY);
     const repartidorText = `Firma del Repartidor: ${routeSheet.repartidor || routeSheet.repartidor_id}`;
     const repartidorLines = doc.splitTextToSize(repartidorText, signatureWidth);
     doc.text(repartidorLines, marginLeft, signatureY + 6);
-
-    // Para el lado derecho (Firma de Responsable en sucursal)
-    const rightX = pageWidth - marginLeft - signatureWidth;
-    doc.line(rightX, signatureY, rightX + signatureWidth, signatureY);
+    // Firma de Responsable de Sucursal (lado derecho)
+    const rightSignatureX = pageWidth - marginLeft - signatureWidth;
+    doc.line(rightSignatureX, signatureY, rightSignatureX + signatureWidth, signatureY);
     const sucursalText = `Firma de Responsable de la sucursal: ${routeSheet.sucursal || routeSheet.sucursal_id}`;
     const sucursalLines = doc.splitTextToSize(sucursalText, signatureWidth);
-    doc.text(sucursalLines, rightX, signatureY + 6);
+    doc.text(sucursalLines, rightSignatureX, signatureY + 6);
 
-    // Guarda el PDF usando el id de la hoja de ruta
+    // Guardar el PDF
     doc.save(`comprobante_recepcion_${routeSheet.codigo}.pdf`);
 };

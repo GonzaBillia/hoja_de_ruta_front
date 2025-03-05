@@ -163,6 +163,7 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
         <Button
           variant={action === "estado" ? "default" : "outline"}
           onClick={() => setAction("estado")}
+          disabled={currentStateId === 4 || currentStateId === 5}
         >
           Cambiar Estado
         </Button>
@@ -177,7 +178,7 @@ const EditarHojaRuta: React.FC<EditarHojaRutaProps> = ({
         )}
       </div>
       {action === "estado" ? (
-        <EstadoEditor estadoId={estadoId} onChange={setEstadoId} />
+        <EstadoEditor estadoId={currentStateId} onChange={setEstadoId} />
       ) : (
         <ModificarEditor
           selectedRepartidor={selectedRepartidor}
