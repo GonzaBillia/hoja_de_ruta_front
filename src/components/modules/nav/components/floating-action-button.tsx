@@ -12,12 +12,12 @@ export const FloatingActionButton = forwardRef<HTMLButtonElement, FloatingAction
       <div className="fixed bottom-6 inset-x-4 sm:inset-x-auto sm:right-4 z-50">
         <Button
           ref={ref}
-          variant="default"
-          className="rounded-xl w-full mx-auto px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
+          variant="principal"
+          className="rounded-xl  w-full mx-auto px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
           aria-label="Escanear"
           {...props}
         >
-          <QrCode className="h-8 w-8" />
+          <QrCode className="h-8 w-8 text-white" />
         </Button>
       </div>
     );

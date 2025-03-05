@@ -86,18 +86,7 @@ const QrModal: React.FC = () => {
                 ? "Activa la cámara para leer el código QR."
                 : "Utiliza el lector para capturar el código QR."}
             </DialogDescription>
-            <div className="flex items-center space-x-2 mt-2">
-              <Checkbox
-                id="manual-input-checkbox"
-                checked={manualInputEnabled}
-                onCheckedChange={(checked) =>
-                  setManualInputEnabled(checked as boolean)
-                }
-              />
-              <Label htmlFor="manual-input-checkbox">
-                Habilitar ingreso manual
-              </Label>
-            </div>
+
           </DialogHeader>
 
           <div className="py-4 flex justify-center">
@@ -134,7 +123,19 @@ const QrModal: React.FC = () => {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex !justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="manual-input-checkbox"
+                checked={manualInputEnabled}
+                onCheckedChange={(checked) =>
+                  setManualInputEnabled(checked as boolean)
+                }
+              />
+              <Label htmlFor="manual-input-checkbox">
+                Habilitar ingreso manual
+              </Label>
+            </div>
             <Button
               variant="outline"
               onClick={handleClose}

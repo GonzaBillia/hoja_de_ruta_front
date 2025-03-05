@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Command } from "lucide-react"
+import { Aperture, Bike, Building2, PackageOpen } from "lucide-react"
 import { NavProjects } from "@/components/modules/nav/nav-projects"
 import { NavUser } from "@/components/modules/nav/nav-user"
 import {
@@ -32,7 +32,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Usamos un valor por defecto en caso de que role?.name sea undefined.
-  const roleName = userData.role?.name ?? ""
+  type RoleName = 'superadmin' | 'deposito' | 'sucursal' | 'repartidor';
+  const roleName = (userData.role?.name ?? "") as RoleName;
 
   // Filtramos los proyectos según el rol del usuario.
   const allowedProjects = data.projects.filter((project) => {
@@ -50,6 +51,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return tool.allowedRoles.includes(roleName);
   });
 
+  const icons: Record<RoleName, JSX.Element> = {
+    superadmin: <Aperture className="size-4" />,
+    deposito: <PackageOpen className="size-4" />,
+    sucursal: <Building2 className="size-4" />,
+    repartidor: <Bike className="size-4" />,
+  };
+
+  interface RoleIconProps {
+    roleName: RoleName;
+  }
+  
+  const RoleIcon: React.FC<RoleIconProps> = ({ roleName }) => {
+    return icons[roleName] || null; // o un icono por defecto
+  };
+
   return (
     <Sidebar
       className="top-[--header-height] !h-[calc(100svh-var(--header-height))]"
@@ -60,8 +76,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to={ROUTES.MAIN}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#007c98] text-[#f3bc00]">
+                  <RoleIcon roleName={roleName} />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">

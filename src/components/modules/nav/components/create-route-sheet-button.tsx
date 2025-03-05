@@ -19,8 +19,8 @@ const NewRouteSheetButton: React.FC = () => {
 
   return (
     <Button
-      variant="default"
-      className="rounded-md flex items-center px-4 py-2"
+      variant="principal"
+      className="rounded-md flex items-center px-4 py-2 "
       onClick={handleClick}
       disabled={isCurrentRoute}
     >

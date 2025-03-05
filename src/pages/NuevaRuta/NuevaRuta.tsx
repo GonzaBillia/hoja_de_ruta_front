@@ -110,7 +110,7 @@ const NuevaRuta = () => {
         </>
       )}
       <div className="w-full mt-2 mb-8 md:mb-2">
-        <Button onClick={handleClick} className="w-full my-4" disabled={notReady}>
+        <Button variant="principal" onClick={handleClick} className="w-full my-4" disabled={notReady}>
           {status == "pending" ? "Creando..." : "Crear Hoja de Ruta"}
         </Button>
       </div>

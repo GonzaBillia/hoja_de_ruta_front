@@ -153,7 +153,7 @@ const QRReader: React.FC<QRReaderProps> = ({ onScanSuccess, onScanError }) => {
   }, []);
 
   return (
-    <div className="relative flex flex-col space-y-4">
+    <div className="relative flex flex-col justify-center space-y-4 min-h-[100px]">
       {processing && (
         <>
         <FullScreenLoader /> 
