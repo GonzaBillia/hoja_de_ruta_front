@@ -18,14 +18,35 @@ import { TipoBulto } from "@/api/tipos-bulto/types/tiposBulto.types";
 import useEstados from "@/api/estado/hooks/useEstados";
 import { Estado } from "@/api/estado/types/estado.types";
 import useSucursal from "@/api/sucursal/hooks/useSucursal";
+import { Bulto } from "@/api/bulto/types/bulto.types";
 
 interface QrModalInfoProps {
   qrData: QrData;
   onClose?: () => void;
 }
 
+function obtenerEstado(bulto: Bulto): string {
+  // Si no existe historial o está vacío, consideramos que nunca se usó
+  if (!bulto.historyRouteSheets || bulto.historyRouteSheets.length === 0) {
+    return "Nunca se uso";
+  }
+
+  // Se toma el último historial, asumiendo que es el registro más reciente
+  const ultimoRegistro = bulto.historyRouteSheets[bulto.historyRouteSheets.length - 1].BultoRouteSheet;
+
+  // Si el bulto ha sido usado, se asume que 'active' debe ser true.
+  if (ultimoRegistro.active) {
+    // Si 'received' es true => Disponible, de lo contrario No Disponible.
+    return ultimoRegistro.received ? "Disponible" : "No Disponible";
+  }
+
+  // En caso de que active sea false (lo cual no debería ocurrir en un bulto usado)
+  return "Nunca se uso";
+}
+
 const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
   const [open, setOpen] = useState(true);
+  const [estadoBulto, setEstadoBulto] = useState<string>("");
 
   // Llamadas a hooks para obtener información general
   const { data: tiposBultos } = useTiposBultos();
@@ -48,6 +69,7 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
   useEffect(() => {
     if (bulto && bulto.route_sheet_id) {
       refetchRouteSheet();
+      setEstadoBulto(obtenerEstado(bulto));
     }
   }, [bulto, refetchRouteSheet]);
 
@@ -88,6 +110,11 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
             <p>
               <span className="font-semibold">Código:</span> {qrData.codigo}
             </p>
+            {bulto && bulto !== null && bulto !== undefined && (
+              <p>
+                <span className="font-semibold">Disponibilidad:</span> {estadoBulto}
+              </p>
+            )}
           </div>
 
           {/* Información del bulto */}
@@ -111,12 +138,12 @@ const QrModalInfo: React.FC<QrModalInfoProps> = ({ qrData, onClose }) => {
           {/* Información del RouteSheet */}
           {routeSheet && (
             <div className="border p-3 rounded-md">
-              <h4 className="font-bold mb-1">Información de la Hoja de Ruta</h4>
+              <h4 className="font-bold mb-1">Información de la Hoja de Ruta Actual</h4>
               <div className="text-sm">
                 <p>
                   <span className="font-semibold">Código:</span> {routeSheet.codigo}
                 </p>
-                <p>
+                <p className="capitalize">
                   <span className="font-semibold">Estado Actual:</span> {estadoNombre}
                 </p>
                 <p>
