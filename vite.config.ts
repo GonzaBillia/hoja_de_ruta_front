@@ -4,9 +4,10 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   // Carga las variables de entorno según el modo actual
-  const env = loadEnv(mode, process.cwd(), 'VITE_');
-  const ALLOWED_HOST = env.ALLOWED_HOST
-  const port = 8080;
+  const env = loadEnv(mode, process.cwd(), '');
+  const ALLOWED_HOST = env.VITE_ALLOWED_HOST
+  // Define el puerto según el ambiente: 8080 en producción, 5173 en desarrollo
+  const port = mode === 'production' ? 8080 : 5173;
 
   return {
     plugins: [react()],
